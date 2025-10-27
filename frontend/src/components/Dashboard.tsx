@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -39,13 +39,13 @@ const Dashboard = () => {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-primary/10">
                 <Code2 className="w-6 h-6 text-primary" />
               </div>
               <span className="text-xl font-bold hidden sm:inline">AI Coding Tutor</span>
             </Link>
-            <Link to="/profile">
+            <Link href="/profile">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
               </Button>
@@ -67,7 +67,7 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/create-course">
+              <Link href="/create-course">
                 <Button className="btn-hero rounded-xl gap-2">
                   <Sparkles className="w-5 h-5" />
                   <span className="hidden sm:inline">Create Course</span>
@@ -164,7 +164,7 @@ const Dashboard = () => {
                 <CardDescription>Jump into your learning activities</CardDescription>
               </CardHeader>
               <CardContent className="grid sm:grid-cols-3 gap-4">
-                <Link to="/courses" className="block">
+                <Link href="/courses" className="block">
                   <Button 
                     variant="outline" 
                     className="w-full h-24 flex-col gap-2 hover:border-primary hover:bg-primary/5 rounded-xl"
@@ -173,7 +173,7 @@ const Dashboard = () => {
                     <span className="font-medium">Browse Courses</span>
                   </Button>
                 </Link>
-                <Link to="/playground" className="block">
+                <Link href="/playground" className="block">
                   <Button 
                     variant="outline" 
                     className="w-full h-24 flex-col gap-2 hover:border-accent hover:bg-accent/5 rounded-xl"
@@ -182,7 +182,7 @@ const Dashboard = () => {
                     <span className="font-medium">Code Playground</span>
                   </Button>
                 </Link>
-                <Link to="/quiz" className="block">
+                <Link href="/quiz" className="block">
                   <Button 
                     variant="outline" 
                     className="w-full h-24 flex-col gap-2 hover:border-secondary hover:bg-secondary/5 rounded-xl"

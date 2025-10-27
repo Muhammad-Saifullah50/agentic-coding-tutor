@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -89,19 +89,19 @@ const Courses = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/dashboard">
+              <Link href="/dashboard">
                 <Button variant="ghost" size="icon">
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-primary/10">
                   <Code2 className="w-6 h-6 text-primary" />
                 </div>
                 <span className="text-xl font-bold hidden sm:inline">AI Coding Tutor</span>
               </Link>
             </div>
-            <Link to="/dashboard">
+            <Link href="/dashboard">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
               </Button>
@@ -162,7 +162,7 @@ const Courses = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Link to={`/courses/${course.id}`} className="w-full">
+                    <Link href={`/courses/${course.id}`} className="w-full">
                       <Button className="btn-hero w-full rounded-xl">
                         Continue Learning
                       </Button>

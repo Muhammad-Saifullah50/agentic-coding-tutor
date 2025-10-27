@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 import  Link from "next/link";
 import { Sparkles } from "lucide-react";
-import ideScreenshot from "./../../public/ide-screenshot.jpg";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import Image from "next/image";
+
 
 const Hero = () => {
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
@@ -87,10 +88,12 @@ const Hero = () => {
             <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 blur-xl" />
             
             <div className="relative">
-              <img 
-                src={ideScreenshot} 
+              <Image 
+                src={'/ide-screenshot.jpg'} 
                 alt="Modern code editor with syntax highlighting and AI assistance"
                 className="w-full h-auto rounded-3xl shadow-2xl border border-border/50 group-hover:scale-[1.02] transition-transform duration-500"
+                width={1200}
+                height={800}
               />
             </div>
           </div>

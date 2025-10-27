@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: coding-tutor-app-frontend
     ports:
-      - "3000:3000"   
+      - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: "http://backend:8000"
     command: npm run dev
@@ -16,6 +16,9 @@ services:
       watch:
         - path: ./frontend
           target: /app
+          action: sync
+        - path: ./frontend/public
+          target: /app/public
           action: sync
 
   backend:

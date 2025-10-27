@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Code2, Github } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
@@ -17,7 +17,7 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-4">
-          <Link to="/" className="flex items-center justify-center gap-2">
+          <Link href="/" className="flex items-center justify-center gap-2">
             <div className="p-2 rounded-xl bg-primary/10">
               <Code2 className="w-8 h-8 text-primary" />
             </div>
@@ -115,7 +115,7 @@ const Signup = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary font-medium hover:underline">
+            <Link href="/login" className="text-primary font-medium hover:underline">
               Log in
             </Link>
           </p>

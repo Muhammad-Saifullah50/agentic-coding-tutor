@@ -1,6 +1,6 @@
 'use client';
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { LessonSidebar, Lesson } from "@/components/course/LessonSidebar";
 import { LessonContent } from "@/components/course/LessonContent";
 import { LessonQuiz } from "@/components/course/LessonQuiz";
@@ -155,7 +155,7 @@ console.log(sumArray(numbers)); // Should return 15`,
 
 const Course = () => {
   const { courseId } = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [currentLessonId, setCurrentLessonId] = useState("1");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -238,7 +238,7 @@ const Course = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/courses")}
+            onClick={() => router.push("/courses")}
             className="gap-2"
           >
             <ArrowLeft className="w-4 h-4" />

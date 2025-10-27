@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -9,7 +9,7 @@ import { useUserProfile } from '@/contexts/UserProfileContext';
 import { toast } from 'sonner';
 
 const Onboarding = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { setUserProfile } = useUserProfile();
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -46,7 +46,7 @@ const Onboarding = () => {
     setTimeout(() => {
       setUserProfile(formData);
       toast.success('Your learning profile is ready!');
-      navigate('/dashboard');
+      router.push('/dashboard');
     }, 2000);
   };
 
