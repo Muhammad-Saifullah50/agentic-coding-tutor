@@ -1,12 +1,13 @@
 'use client';
 import { Button } from "@/components/ui/button";
-import  Link from "next/link";
+import  Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import Image from "next/image";
 
 
 const Hero = () => {
+  // CORRECTED: The hook is called and variables are destructured.
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
 
   return (
@@ -77,6 +78,7 @@ const Hero = () => {
 
         {/* IDE Screenshot Below Hero */}
         <div 
+          // CORRECTED: ref and className logic are properly enabled
           ref={elementRef}
           className={`mt-16 md:mt-24 max-w-6xl mx-auto transition-all duration-1000 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'

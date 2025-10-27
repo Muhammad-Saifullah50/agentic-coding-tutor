@@ -33,20 +33,22 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"message": "welcome fast api"}
+    return {"message": "welcome to api"}
 
 
-@app.post("/send-message")
-async def send_message(request: Request):
+@app.post("/create-course")
+async def create_course(request: Request):
     try:
         body = await request.json()
         prompt = body.get("prompt")
         mode = body.get("mode")
         
-        
+        #  have to fetch user data here probably get fronm the 
+        # incoming data . then orchestarte agenbts etc  
+
+# also have to add dynamic instruictions
         enable_verbose_stdout_logging()
 
-        agentops.init(agentops_api_key)
         result = await Runner.run(
             triage_agent,
             input=prompt,

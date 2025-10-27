@@ -8,11 +8,10 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useTheme } from "@/components/ThemeProvider";
+import { ThemeToggleButton } from "./ThemeToggleButton";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   const navItems = [
     { label: "Features", href: "#features" },
@@ -30,7 +29,7 @@ const Navbar = () => {
             <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
               <Code2 className="w-6 h-6 text-primary" />
             </div>
-            <span className="text-xl font-bold text-foreground">AI Coding Tutor</span>
+            <span className="text-xl font-bold text-foreground">CodeQuora</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -58,15 +57,7 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            >
-              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
+           <ThemeToggleButton/>
             <Link href="/login">
               <Button variant="ghost">Log In</Button>
             </Link>
@@ -86,15 +77,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-6 mt-8">
                 <div className="flex items-center justify-between pb-4 border-b border-border">
                   <span className="text-sm font-medium text-muted-foreground">Theme</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                  >
-                    <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="sr-only">Toggle theme</span>
-                  </Button>
+                <ThemeToggleButton/>
                 </div>
                 {navItems.map((item) => (
                   item.href.startsWith("#") ? (
