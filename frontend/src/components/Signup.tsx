@@ -1,3 +1,4 @@
+'use client'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -5,13 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from "next/link";
 import { Code2, Github } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
+import { signup } from "@/actions/auth.actions";
 
 const Signup = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Authentication logic will be added later
-    console.log("Signup form submitted");
-  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -57,7 +55,7 @@ const Signup = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form  className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -95,6 +93,7 @@ const Signup = () => {
               type="submit" 
               className="w-full btn-hero rounded-xl" 
               size="lg"
+              formAction={signup}
             >
               Create Account
             </Button>
@@ -126,3 +125,5 @@ const Signup = () => {
 };
 
 export default Signup;
+// have to addgithub and google auth later
+// and debug email auth issues

@@ -6,13 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Code2, Github } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+import { login } from '@/actions/auth.actions'
+
 
 const Login = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Authentication logic will be added later
-    console.log("Login form submitted");
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -30,7 +27,7 @@ const Login = () => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -61,7 +58,8 @@ const Login = () => {
               />
             </div>
 
-            <Button 
+            <Button
+            formAction={login} 
               type="submit" 
               className="w-full btn-hero rounded-xl" 
               size="lg"
@@ -102,7 +100,7 @@ const Login = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link href="/signup" className="text-primary font-medium hover:underline">
+            <Link href="/register" className="text-primary font-medium hover:underline">
               Sign up
             </Link>
           </p>
