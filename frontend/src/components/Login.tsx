@@ -1,15 +1,54 @@
 'use client'
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Code2, Github } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
-import Link from "next/link";
+import { useTransition, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { toast } from '@/components/ui/use-toast'
+import { Button } from "@/components/ui/button"
+import { useSupabaseUser } from '@/hooks/useSupabaseUser'
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Code2, Github } from "lucide-react"
+import { FcGoogle } from "react-icons/fc"
+import Link from "next/link"
 import { login } from '@/actions/auth.actions'
 
 
 const Login = () => {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    try {
+      const err = searchParams?.get('error')
+      if (err) {
+        toast({
+          title: 'Error',
+          description: String(err),
+          variant: 'destructive',
+        })
+      }
+    } catch (e) {
+      console.error('Error reading login search params', e)
+    }
+  }, [searchParams?.toString()])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const formData = new FormData(e.currentTarget)
+
+    startTransition(async () => {
+      const result = await login(formData)
+
+      if (result?.success) {
+        toast({ title: 'Logged in', description: 'Welcome back!' })
+        router.push('/')
+      } else if (result?.error) {
+        toast({ title: 'Error', description: result.error, variant: 'destructive' })
+      }
+    })
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -27,13 +66,14 @@ const Login = () => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
+                name="email"
                 required
                 className="rounded-xl"
               />
@@ -53,18 +93,19 @@ const Login = () => {
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                name="password"
                 required
                 className="rounded-xl"
               />
             </div>
 
             <Button
-            formAction={login} 
-              type="submit" 
-              className="w-full btn-hero rounded-xl" 
+              type="submit"
+              className="w-full btn-hero rounded-xl"
               size="lg"
+              disabled={isPending}
             >
-              Log In
+              {isPending ? 'Logging in...' : 'Log In'}
             </Button>
           </form>
 

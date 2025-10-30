@@ -1,15 +1,68 @@
 'use client'
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { Code2, Github } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
-import { signup } from "@/actions/auth.actions";
+
+import { useTransition, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { toast } from '@/components/ui/use-toast'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import Link from "next/link"
+import { Code2, Github } from "lucide-react"
+import { FcGoogle } from "react-icons/fc"
+import { signup } from "@/actions/auth.actions"
 
 const Signup = () => {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
+  useEffect(() => {
+    try {
+      const err = searchParams?.get('error')
+      if (err) {
+        toast({
+          title: 'Error',
+          description: String(err),
+          variant: 'destructive',
+        })
+      }
+    } catch (e) {
+      console.error('Error reading signup search params', e)
+    }
+  }, [searchParams?.toString()])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const formData = new FormData(e.currentTarget)
+
+    startTransition(async () => {
+      const result = await signup(formData)
+
+      if (result?.success) {
+        toast({
+          title: 'Account created successfully!',
+          description: 'Please check your email to verify your account',
+        })
+        router.push('/login?message=Account created successfully, please verify your email')
+      } else if (result?.error) {
+
+        toast({
+          title: 'Error',
+          description: result.error,
+          variant: 'destructive',
+        })
+      }
+    })
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -28,16 +81,16 @@ const Signup = () => {
 
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="rounded-xl"
               onClick={() => console.log("Google signup")}
             >
               <FcGoogle className="w-5 h-5 mr-2" />
               Google
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="rounded-xl"
               onClick={() => console.log("GitHub signup")}
             >
@@ -51,17 +104,20 @@ const Signup = () => {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or sign up with email</span>
+              <span className="bg-card px-2 text-muted-foreground">
+                Or sign up with email
+              </span>
             </div>
           </div>
 
-          <form  className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Saifullah Ahmad"
+                placeholder="Your Name"
+                name="name"
                 required
                 className="rounded-xl"
               />
@@ -72,6 +128,7 @@ const Signup = () => {
               <Input
                 id="email"
                 type="email"
+                name="email"
                 placeholder="you@example.com"
                 required
                 className="rounded-xl"
@@ -83,20 +140,23 @@ const Signup = () => {
               <Input
                 id="password"
                 type="password"
+                name="password"
                 placeholder="••••••••"
                 required
                 className="rounded-xl"
               />
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full btn-hero rounded-xl" 
+            <Button
+              type="submit"
+              className="w-full btn-hero rounded-xl"
               size="lg"
-              formAction={signup}
+              disabled={isPending}
             >
-              Create Account
+              {isPending ? 'Creating account...' : 'Create Account'}
             </Button>
+
+        
           </form>
 
           <p className="text-xs text-center text-muted-foreground">
@@ -121,9 +181,7 @@ const Signup = () => {
         </CardFooter>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Signup;
-// have to addgithub and google auth later
-// and debug email auth issues
+export default Signup

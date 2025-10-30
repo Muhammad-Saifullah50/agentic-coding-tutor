@@ -1,17 +1,32 @@
 'use client'
-import  Link  from "next/link";
-import { Button } from "@/components/ui/button";
-import { Code2, Menu, Moon, Sun } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Code2, Menu, LogOut } from "lucide-react"
+import { useState } from "react"
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { ThemeToggleButton } from "./ThemeToggleButton";
+import { useSupabaseUser } from '@/hooks/useSupabaseUser'
+import { createClient } from '@/utils/supabase/client'
 
 const Navbar = () => {
+  const supabase = createClient()
+
+
+  const { user, loading } = useSupabaseUser()
+console.log(user)
   const [open, setOpen] = useState(false);
+
+  //todo: have to separate mobile nav and make it client component and make this desktop nav server component.
 
   const navItems = [
     { label: "Features", href: "#features" },
@@ -57,13 +72,46 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-           <ThemeToggleButton/>
-            <Link href="/login">
-              <Button variant="ghost">Log In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button className="btn-hero rounded-xl">Start Learning Free</Button>
-            </Link>
+            <ThemeToggleButton />
+            {!user ? (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost">Log In</Button>
+                </Link>
+                <Link href="/signup">
+                  <Button className="btn-hero rounded-xl">Start Learning Free</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        className="rounded-xl" 
+                        variant="secondary"
+                        disabled={!user.confirmed_at}
+                      >
+                        Dashboard
+                      </Button>
+                    </TooltipTrigger>
+                    {!user.confirmed_at && (
+                      <TooltipContent>
+                        <p>Please verify your email to access the dashboard</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+                <Button 
+                  variant="ghost" 
+                  className="gap-2"
+                  onClick={() => supabase.auth.signOut()}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu */}
@@ -77,7 +125,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-6 mt-8">
                 <div className="flex items-center justify-between pb-4 border-b border-border">
                   <span className="text-sm font-medium text-muted-foreground">Theme</span>
-                <ThemeToggleButton/>
+                  <ThemeToggleButton />
                 </div>
                 {navItems.map((item) => (
                   item.href.startsWith("#") ? (
@@ -101,16 +149,49 @@ const Navbar = () => {
                   )
                 ))}
                 <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                  <Link href="/login" onClick={() => setOpen(false)}>
-                    <Button variant="outline" className="w-full rounded-xl">
-                      Log In
-                    </Button>
-                  </Link>
-                  <Link href="/signup" onClick={() => setOpen(false)}>
-                    <Button className="btn-hero w-full rounded-xl">
-                      Start Learning Free
-                    </Button>
-                  </Link>
+                  {!user ? (
+                    <>
+                      <Link href="/login" onClick={() => setOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-xl">
+                          Log In
+                        </Button>
+                      </Link>
+                      <Link href="/signup" onClick={() => setOpen(false)}>
+                        <Button className="btn-hero w-full rounded-xl">
+                          Start Learning Free
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              className="w-full rounded-xl"
+                              variant="secondary"
+                              disabled={!user.confirmed_at}
+                            >
+                              Dashboard
+                            </Button>
+                          </TooltipTrigger>
+                          {!user.confirmed_at && (
+                            <TooltipContent>
+                              <p>Please verify your email to access the dashboard</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-xl gap-2"
+                        onClick={() => supabase.auth.signOut()}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </SheetContent>

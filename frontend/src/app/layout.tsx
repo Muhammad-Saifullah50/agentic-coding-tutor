@@ -1,4 +1,5 @@
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { Toaster } from '@/components/ui/toaster'
 import '../globals.css'
 
 export default function RootLayout({
@@ -16,8 +17,8 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <div id='root'>
-
-            {children}
+              {children}
+              <Toaster />
             </div>
           </ThemeProvider>
       </body>
