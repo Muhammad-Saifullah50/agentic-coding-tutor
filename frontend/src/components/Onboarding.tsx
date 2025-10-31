@@ -5,16 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Code2, Sparkles, Target, Brain, Clock, CheckCircle2, Edit2 } from 'lucide-react';
-import { useUserProfile } from '@/contexts/UserProfileContext';
-import { toast } from 'sonner';
+import { updateUserProfile } from '@/actions/profile.actions';
+import { useToast } from '@/hooks/use-toast';
 
 const Onboarding = () => {
   const router = useRouter();
-  const { setUserProfile } = useUserProfile();
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
+  const { toast } = useToast()
+
   const [formData, setFormData] = useState({
+
     ageRange: '',
     educationLevel: '',
     techBackground: '',
@@ -41,14 +43,39 @@ const Onboarding = () => {
     if (step > 0) setStep(step - 1);
   };
 
-  const handleComplete = () => {
+const handleComplete = async () => {
+  try {
     setIsGenerating(true);
-    setTimeout(() => {
-      setUserProfile(formData);
-      toast.success('Your learning profile is ready!');
-      router.push('/dashboard');
-    }, 2000);
-  };
+
+    const result = await updateUserProfile(formData);
+
+    if (result?.error) {
+
+      toast({
+        title: 'Error creating profile',
+        description: result.error.message || 'Something went wrong while creating your profile.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Profile Created',
+      description: 'Your personalized learning profile has been created successfully!',
+    });
+
+    router.push('/dashboard');
+  } catch (error) {
+    console.error(error);
+    toast({
+      title: 'Error',
+      description: 'An unexpected error occurred while creating profile.',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   const toggleGoal = (goal: string) => {
     setFormData(prev => ({
@@ -66,14 +93,13 @@ const Onboarding = () => {
           <CardContent className="p-12 text-center">
             <div className="mb-6 flex justify-center">
               <div className="p-4 rounded-full bg-gradient-to-br from-primary to-secondary animate-pulse">
-                <Sparkles className="w-12 h-12 text-white" />
+                <Sparkles className="w-12 h-12 text-white animate-spin" />
               </div>
             </div>
             <h2 className="text-2xl font-bold mb-2">Building Your Profile</h2>
             <p className="text-muted-foreground mb-6">
               Creating your personalized learning experience...
             </p>
-            <Progress value={100} className="h-2" />
           </CardContent>
         </Card>
       </div>

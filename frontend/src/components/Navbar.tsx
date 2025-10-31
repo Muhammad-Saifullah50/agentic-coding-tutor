@@ -8,12 +8,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import { useSupabaseUser } from '@/hooks/useSupabaseUser'
 import { createClient } from '@/utils/supabase/client'
@@ -23,7 +18,7 @@ const Navbar = () => {
 
 
   const { user, loading } = useSupabaseUser()
-console.log(user)
+
   const [open, setOpen] = useState(false);
 
   //todo: have to separate mobile nav and make it client component and make this desktop nav server component.
@@ -84,24 +79,15 @@ console.log(user)
               </>
             ) : (
               <>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+              <Link href="/dashboard">
                       <Button 
                         className="rounded-xl" 
-                        variant="secondary"
+                        
                         disabled={!user.confirmed_at}
                       >
                         Dashboard
                       </Button>
-                    </TooltipTrigger>
-                    {!user.confirmed_at && (
-                      <TooltipContent>
-                        <p>Please verify your email to access the dashboard</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
+                    </Link>
                 <Button 
                   variant="ghost" 
                   className="gap-2"
@@ -164,24 +150,14 @@ console.log(user)
                     </>
                   ) : (
                     <>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                    <Link href="/dashboard" onClick={() => setOpen(false)}>
                             <Button
                               className="w-full rounded-xl"
-                              variant="secondary"
                               disabled={!user.confirmed_at}
                             >
                               Dashboard
                             </Button>
-                          </TooltipTrigger>
-                          {!user.confirmed_at && (
-                            <TooltipContent>
-                              <p>Please verify your email to access the dashboard</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
+                          </Link>
                       <Button
                         variant="outline"
                         className="w-full rounded-xl gap-2"

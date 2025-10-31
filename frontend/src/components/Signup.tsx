@@ -18,12 +18,15 @@ import Link from "next/link"
 import { Code2, Github } from "lucide-react"
 import { FcGoogle } from "react-icons/fc"
 import { signup } from "@/actions/auth.actions"
+import { createClient } from '@/utils/supabase/client'
+import { updateUserProfile } from '@/actions/profile.actions'
 
 const Signup = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
+  const supabase = createClient()
   useEffect(() => {
     try {
       const err = searchParams?.get('error')
@@ -43,6 +46,11 @@ const Signup = () => {
     e.preventDefault()
 
     const formData = new FormData(e.currentTarget)
+
+    const profileData = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+    }
 
     startTransition(async () => {
       const result = await signup(formData)
@@ -64,6 +72,26 @@ const Signup = () => {
     })
   }
 
+  const handleGoogleAuth = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+    })
+  }
+  const handleGithubAuth = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'github',
+    })
+  }
+
+  const handleSocialAuth = (provider: 'google' | 'github') => {
+
+    
+    if (provider === 'google') {
+      handleGoogleAuth();
+    } else if (provider === 'github') {
+      handleGithubAuth()
+    }
+  }
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <Card className="w-full max-w-md animate-fade-in">
@@ -84,7 +112,7 @@ const Signup = () => {
             <Button
               variant="outline"
               className="rounded-xl"
-              onClick={() => console.log("Google signup")}
+              onClick={() => handleSocialAuth('google')}
             >
               <FcGoogle className="w-5 h-5 mr-2" />
               Google
@@ -92,7 +120,7 @@ const Signup = () => {
             <Button
               variant="outline"
               className="rounded-xl"
-              onClick={() => console.log("GitHub signup")}
+              onClick={() => handleSocialAuth('github')}
             >
               <Github className="w-5 h-5 mr-2" />
               GitHub
@@ -156,7 +184,7 @@ const Signup = () => {
               {isPending ? 'Creating account...' : 'Create Account'}
             </Button>
 
-        
+
           </form>
 
           <p className="text-xs text-center text-muted-foreground">
