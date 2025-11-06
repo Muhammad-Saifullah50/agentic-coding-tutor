@@ -1,14 +1,12 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import { createClient } from '@/utils/supabase/server';
+import { supabaseAdmin } from '@/utils/supabase/admin';
 
 export const dynamic = "force-dynamic";
 
 
 export async function POST(req: Request) {
-
-    const supabase = await createClient();
 
     // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET
@@ -59,7 +57,7 @@ export async function POST(req: Request) {
     if (eventType === 'user.created') {
         const { id, email_addresses, image_url, username } = evt.data;
 
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('UserProfile')
             .insert([
                 {
@@ -81,7 +79,7 @@ export async function POST(req: Request) {
     if (eventType === 'user.updated') {
         const { id, email_addresses, image_url, username } = evt.data;
 
-        const {  error } = await supabase
+        const {  error } = await supabaseAdmin
             .from('UserProfile')
             .update({
                 email: email_addresses[0].email_address,
