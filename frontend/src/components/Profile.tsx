@@ -5,12 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Code2, ArrowLeft, Edit2, User, Target, Clock, Brain, Trophy, Award, Sparkles, Crown } from 'lucide-react';
-import { useUserProfile } from '@/contexts/UserProfileContext';
 import { toast } from 'sonner';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { userProfile } = useUserProfile();
   const [currentPlan] = useState('free'); // 'free', 'pro', 'premium'
 
   // Mock progress data
@@ -30,23 +28,23 @@ const Profile = () => {
     navigate('/onboarding');
   };
 
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>No Profile Found</CardTitle>
-            <CardDescription>Please complete onboarding first</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/onboarding')} className="w-full btn-hero">
-              Start Onboarding
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // if (!userProfile) {
+  //   return (
+  //     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+  //       <Card className="max-w-md w-full">
+  //         <CardHeader>
+  //           <CardTitle>No Profile Found</CardTitle>
+  //           <CardDescription>Please complete onboarding first</CardDescription>
+  //         </CardHeader>
+  //         <CardContent>
+  //           <Button onClick={() => navigate('/onboarding')} className="w-full btn-hero">
+  //             Start Onboarding
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -124,7 +122,7 @@ const Profile = () => {
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5">
                 <span className="text-sm text-muted-foreground">Age Group</span>
-                <span className="font-medium">{userProfile.ageRange}</span>
+                {/* <span className="font-medium">{userProfile.ageRange}</span> */}
               </div>
             </CardContent>
           </Card>
@@ -159,28 +157,28 @@ const Profile = () => {
                   <Code2 className="w-4 h-4 text-primary" />
                   <span className="text-xs text-muted-foreground">Background</span>
                 </div>
-                <p className="font-medium">{userProfile.techBackground}</p>
+                {/* <p className="font-medium">{userProfile.techBackground}</p> */}
               </div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="w-4 h-4 text-secondary" />
                   <span className="text-xs text-muted-foreground">Goals</span>
                 </div>
-                <p className="font-medium text-sm">{userProfile.goals[0]}</p>
+                {/* <p className="font-medium text-sm">{userProfile.goals[0]}</p> */}
               </div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-4 h-4 text-accent" />
                   <span className="text-xs text-muted-foreground">Time Commitment</span>
                 </div>
-                <p className="font-medium">{userProfile.timePerWeek}</p>
+                {/* <p className="font-medium">{userProfile.timePerWeek}</p> */}
               </div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/5 border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Brain className="w-4 h-4 text-primary" />
                   <span className="text-xs text-muted-foreground">Learning Style</span>
                 </div>
-                <p className="font-medium">{userProfile.learningMode}</p>
+                {/* <p className="font-medium">{userProfile.learningMode}</p> */}
               </div>
             </CardContent>
           </Card>

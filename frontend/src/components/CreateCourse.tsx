@@ -6,12 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Code2, ArrowLeft, Edit2, Sparkles, RefreshCw, User, Target, Clock, Brain } from 'lucide-react';
-import { useUserProfile } from '@/contexts/UserProfileContext';
 import { toast } from 'sonner';
 
 const CreateCourse = () => {
   const navigate = useNavigate();
-  const { userProfile } = useUserProfile();
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
@@ -60,23 +58,23 @@ const CreateCourse = () => {
     }, 3000);
   };
 
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>No Profile Found</CardTitle>
-            <CardDescription>Please complete onboarding first</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/onboarding')} className="w-full btn-hero">
-              Start Onboarding
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // if (!userProfile) {
+  //   return (
+  //     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+  //       <Card className="max-w-md w-full">
+  //         <CardHeader>
+  //           <CardTitle>No Profile Found</CardTitle>
+  //           <CardDescription>Please complete onboarding first</CardDescription>
+  //         </CardHeader>
+  //         <CardContent>
+  //           <Button onClick={() => navigate('/onboarding')} className="w-full btn-hero">
+  //             Start Onboarding
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
 
   if (isGenerating) {
     return (
@@ -158,7 +156,9 @@ const CreateCourse = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid sm:grid-cols-2 gap-4">
+         
+         
+             {/* <div className="grid sm:grid-cols-2 gap-4">
               {[
                 { label: 'Background', value: userProfile.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
                 { label: 'Learning Goal', value: userProfile.goals[0], icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
@@ -190,7 +190,7 @@ const CreateCourse = () => {
                   </div>
                 );
               })}
-            </div>
+            </div>  */}
             
             {/* AI Ready Indicator */}
             <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 flex items-center gap-3">

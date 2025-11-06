@@ -1,6 +1,6 @@
 'use client';
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { LessonSidebar, Lesson } from "@/components/course/LessonSidebar";
 import { LessonContent } from "@/components/course/LessonContent";
 import { LessonQuiz } from "@/components/course/LessonQuiz";

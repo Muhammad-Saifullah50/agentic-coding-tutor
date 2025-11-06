@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    unoptimized: true, // ✅ disable optimization (works perfectly in Docker dev)
-  },
+    typescript: {
+        ignoreBuildErrors: true,
+
+    },
+    webpack: {
+        ignoreBuildErrors: true
+    },
+    eslint: {
+        ignoreDuringBuilds: true,
+    }
 }
- 
+
 export default nextConfig

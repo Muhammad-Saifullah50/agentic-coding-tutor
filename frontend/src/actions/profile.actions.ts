@@ -23,3 +23,4 @@ export const updateUserProfile = async (userdata: object) => {
    
 }
 
+// have to use supabase api supoabase.insert etc
