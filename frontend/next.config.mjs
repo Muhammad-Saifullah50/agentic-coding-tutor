@@ -4,12 +4,9 @@ const nextConfig = {
         ignoreBuildErrors: true,
 
     },
-    webpack: {
-        ignoreBuildErrors: true
-    },
-    eslint: {
-        ignoreDuringBuilds: true,
-    }
+   turbopack: {
+    ignoreBuildErrors:true
+   }
 }
 
 export default nextConfig
