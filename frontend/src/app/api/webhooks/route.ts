@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET
 
     if (!WEBHOOK_SECRET) {
-        throw new Error('Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
+        throw new Error('Please add CLERK_WEBHOOK_SIGNING_SECRET from Clerk Dashboard to .env or .env.local')
     }
 
     // Get the headers
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
             .from('UserProfile')
             .insert([
                 {
-                    id: id,
+                    userId: id,
                     email: email_addresses[0].email_address,
                     username: username,
                     imageUrl: image_url,
