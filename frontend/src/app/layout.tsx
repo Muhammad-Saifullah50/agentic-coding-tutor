@@ -4,12 +4,19 @@ import '../globals.css'
 import {
   ClerkProvider
 } from '@clerk/nextjs'
+import Navbar from '@/components/Navbar'
+import { getCurrentUserWithProfile } from '@/actions/profile.actions'
+import { redirect } from 'next/navigation'
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+
+    const user = await getCurrentUserWithProfile()
+  
+    if (user && !user?.onBoarded) redirect('/onboarding');
   return (
     <ClerkProvider>
 
@@ -21,10 +28,13 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div id='root'>
+            <main id='root' className=''>
+              <Navbar user={user}/>
+              <div className="min-h-screen bg-background pt-20">
               {children}
+              </div>
               <Toaster />
-            </div>
+            </main>
           </ThemeProvider>
         </body>
       </html>

@@ -8,7 +8,7 @@ import { Code2, Sparkles, Target, Brain, Clock, CheckCircle2, Edit2 } from 'luci
 import { updateUserProfile } from '@/actions/profile.actions';
 import { useToast } from '@/hooks/use-toast';
 
-const Onboarding = () => {
+const Onboarding = ({userId}: {userId: string}) => {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -47,13 +47,13 @@ const handleComplete = async () => {
   try {
     setIsGenerating(true);
 
-    const result = await updateUserProfile(formData);
+    const result = await updateUserProfile(formData, userId);
 
-    if (result?.error) {
+    if (!result.success) {
 
       toast({
-        title: 'Error creating profile',
-        description: result.error.message || 'Something went wrong while creating your profile.',
+        title: 'Error updating profile',
+        description: 'Something went wrong while updating your profile. Please try again.',
         variant: 'destructive',
       });
       return;

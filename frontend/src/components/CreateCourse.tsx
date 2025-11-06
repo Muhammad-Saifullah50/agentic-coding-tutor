@@ -1,15 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Code2, ArrowLeft, Edit2, Sparkles, RefreshCw, User, Target, Clock, Brain } from 'lucide-react';
+import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain,Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { UserProfile } from '@/types/user';
 
-const CreateCourse = () => {
-  const navigate = useNavigate();
+const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
@@ -58,23 +57,6 @@ const CreateCourse = () => {
     }, 3000);
   };
 
-  // if (!userProfile) {
-  //   return (
-  //     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-  //       <Card className="max-w-md w-full">
-  //         <CardHeader>
-  //           <CardTitle>No Profile Found</CardTitle>
-  //           <CardDescription>Please complete onboarding first</CardDescription>
-  //         </CardHeader>
-  //         <CardContent>
-  //           <Button onClick={() => navigate('/onboarding')} className="w-full btn-hero">
-  //             Start Onboarding
-  //           </Button>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   );
-  // }
 
   if (isGenerating) {
     return (
@@ -99,26 +81,7 @@ const CreateCourse = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/" className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Code2 className="w-6 h-6 text-primary" />
-                </div>
-                <span className="text-xl font-bold hidden sm:inline">AI Coding Tutor</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+  
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Page Header */}
@@ -158,7 +121,7 @@ const CreateCourse = () => {
           <CardContent>
          
          
-             {/* <div className="grid sm:grid-cols-2 gap-4">
+             <div className="grid sm:grid-cols-2 gap-4">
               {[
                 { label: 'Background', value: userProfile.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
                 { label: 'Learning Goal', value: userProfile.goals[0], icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
@@ -190,7 +153,7 @@ const CreateCourse = () => {
                   </div>
                 );
               })}
-            </div>  */}
+            </div> 
             
             {/* AI Ready Indicator */}
             <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 flex items-center gap-3">

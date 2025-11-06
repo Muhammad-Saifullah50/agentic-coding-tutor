@@ -1,11 +1,16 @@
+import { getCurrentUserWithProfile } from '@/actions/profile.actions'
 import CreateCourse from '@/components/CreateCourse'
+import { redirect } from 'next/navigation'
 
-const CreateCoursePage = () => {
+const CreateCoursePage = async () => {
+        const userProfile = await getCurrentUserWithProfile()
+
+        if (!userProfile) {
+            redirect('/sign-in')
+        }
     return (
-        // <CreateCourse />
-        <div className="flex items-center justify-center h-full">
-            <h1 className="text-2xl font-bold">Create Course Page - Coming Soon!</h1>
-        </div>
+        <CreateCourse userProfile={userProfile}/>
+        
     )
 }
 

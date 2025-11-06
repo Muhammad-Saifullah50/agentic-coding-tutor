@@ -1,34 +1,24 @@
-'use client'
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Code2, Menu, LogOut } from "lucide-react"
-import { useState } from "react"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { Code2 } from "lucide-react"
+import MobileNav from "@/components/MobileNav"
+import { ThemeToggleButton } from "./ThemeToggleButton"
+import { UserProfile } from "@/types/user"
+import { Button } from "./ui/button"
+import { UserButton } from "@clerk/nextjs"
+import { Skeleton } from "./ui/skeleton"
+import { headers } from "next/headers"
 
-import { ThemeToggleButton } from "./ThemeToggleButton";
-import { useSupabaseUser } from '@/hooks/useSupabaseUser'
-import { createClient } from '@/utils/supabase/client'
-
-const Navbar = () => {
-  const supabase = createClient()
-
-
-  const { user, loading } = useSupabaseUser()
-
-  const [open, setOpen] = useState(false);
-
-  //todo: have to separate mobile nav and make it client component and make this desktop nav server component.
+const Navbar = async ({ user }: { user: UserProfile | null }) => {
+  const headerList = await headers();
+  const pathname = headerList.get("x-current-path");
 
   const navItems = [
     { label: "Features", href: "#features" },
     { label: "Playground", href: "/playground" },
     { label: "Pricing", href: "#pricing" },
     { label: "About", href: "#about" },
-  ];
+  ]
+
 
   return (
     <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b border-border z-50">
@@ -44,24 +34,14 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              item.href.startsWith("#") ? (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-                >
-                  {item.label}
-                </Link>
-              )
+            {pathname == '/' && navItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+              >
+                {item.label}
+              </Link>
             ))}
           </div>
 
@@ -70,112 +50,33 @@ const Navbar = () => {
             <ThemeToggleButton />
             {!user ? (
               <>
-                <Link href="/login">
-                  <Button variant="ghost">Log In</Button>
+                <Link href="/sign-in">
+                  <Button variant="ghost">Sign In</Button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/sign-up">
                   <Button className="btn-hero rounded-xl">Start Learning Free</Button>
                 </Link>
               </>
             ) : (
               <>
-              <Link href="/dashboard">
-                      <Button 
-                        className="rounded-xl" 
-                        
-                        disabled={!user.confirmed_at}
-                      >
-                        Dashboard
-                      </Button>
-                    </Link>
-                <Button 
-                  variant="ghost" 
-                  className="gap-2"
-                  onClick={() => supabase.auth.signOut()}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign out
-                </Button>
+                <Link href="/dashboard">
+                  <Button
+                    className="rounded-xl"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+                <UserButton fallback={<Skeleton className="rounded-full h-10 w-10"/>}/>
+                {/* todo: have to check the skeleton */}
               </>
             )}
           </div>
-
           {/* Mobile Menu */}
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <div className="flex flex-col gap-6 mt-8">
-                <div className="flex items-center justify-between pb-4 border-b border-border">
-                  <span className="text-sm font-medium text-muted-foreground">Theme</span>
-                  <ThemeToggleButton />
-                </div>
-                {navItems.map((item) => (
-                  item.href.startsWith("#") ? (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  )
-                ))}
-                <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                  {!user ? (
-                    <>
-                      <Link href="/login" onClick={() => setOpen(false)}>
-                        <Button variant="outline" className="w-full rounded-xl">
-                          Log In
-                        </Button>
-                      </Link>
-                      <Link href="/signup" onClick={() => setOpen(false)}>
-                        <Button className="btn-hero w-full rounded-xl">
-                          Start Learning Free
-                        </Button>
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                    <Link href="/dashboard" onClick={() => setOpen(false)}>
-                            <Button
-                              className="w-full rounded-xl"
-                              disabled={!user.confirmed_at}
-                            >
-                              Dashboard
-                            </Button>
-                          </Link>
-                      <Button
-                        variant="outline"
-                        className="w-full rounded-xl gap-2"
-                        onClick={() => supabase.auth.signOut()}
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign out
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <MobileNav user={user} navItems={navItems} />
         </div>
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

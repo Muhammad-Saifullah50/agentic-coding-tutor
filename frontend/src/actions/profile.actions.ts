@@ -1,26 +1,38 @@
 'use server'
 
+import { supabaseAdmin } from "@/utils/supabase/admin"
+import { UserProfile, UserProfileInput } from "@/types/user";
+import { currentUser } from "@clerk/nextjs/server";
+import { getUserDetails } from "./user.actions";
+import { on } from "events";
 
-export const updateUserProfile = async (userdata: object) => {
-
+export const getCurrentUserWithProfile = async () => {
     try {
-        const res = await fetch("https://xxcqpwddpfrspgqtxvrb.supabase.co/rest/v1/UserProfile", {
-        method: "POST",
-        headers: {
-            "apikey": process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!}`,
-            "Content-Type": "application/json",
-        },
-        // correct the types
-        body: JSON.stringify(userdata),
-    })
-
-    const data = await res.json()
-    return data 
+        const clerkUser = await currentUser()
+        const user: UserProfile | null = await getUserDetails(clerkUser?.id);
+        return user;
     } catch (error) {
-        console.error('Error updating user profile:', error)
+        console.error('Error fetching current user with profile:', error)
+        return null
     }
-   
+
 }
 
-// have to use supabase api supoabase.insert etc
+export const updateUserProfile = async (userdata: UserProfileInput, userId: string) => {
+
+const dataToUpdate = {...userdata, onBoarded: true};
+    try {
+        const { error } = await supabaseAdmin
+            .from('UserProfile')
+            .update(dataToUpdate)
+            .eq('userId', userId);
+        if (error) {
+            throw error;
+        }
+        return {'success': true};
+    } catch (error) {
+        console.error('Error updating user profile:', error)
+        return {'success': false};
+    }
+
+}

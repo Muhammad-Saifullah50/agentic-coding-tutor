@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles } from "lucide-react";
 import aiMentor from "./../../public/ai-mentor.jpg";
+import { UserButton } from "@clerk/nextjs";
 
 const Dashboard = () => {
   // Mock data - will be replaced with real data
@@ -34,25 +35,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <Code2 className="w-6 h-6 text-primary" />
-              </div>
-              <span className="text-xl font-bold hidden sm:inline">AI Coding Tutor</span>
-            </Link>
-            <Link href="/profile">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background ">
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
@@ -67,7 +50,7 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link href="/create-course">
+              <Link href="/courses/create">
                 <Button className="btn-hero rounded-xl gap-2">
                   <Sparkles className="w-5 h-5" />
                   <span className="hidden sm:inline">Create Course</span>
