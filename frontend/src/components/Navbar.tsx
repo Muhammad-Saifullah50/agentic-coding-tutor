@@ -6,11 +6,9 @@ import { UserProfile } from "@/types/user"
 import { Button } from "./ui/button"
 import { UserButton } from "@clerk/nextjs"
 import { Skeleton } from "./ui/skeleton"
-import { headers } from "next/headers"
 
 const Navbar = async ({ user }: { user: UserProfile | null }) => {
-  const headerList = await headers();
-  const pathname = headerList.get("x-current-path");
+
 
   const navItems = [
     { label: "Features", href: "#features" },
@@ -34,7 +32,7 @@ const Navbar = async ({ user }: { user: UserProfile | null }) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {pathname == '/' && navItems.map((item) => (
+            {!user && navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}

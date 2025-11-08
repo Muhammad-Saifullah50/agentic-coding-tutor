@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain,Edit2 } from 'lucide-react';
+import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserProfile } from '@/types/user';
 
-const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
+import { useRouter } from 'next/navigation';
+
+const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
@@ -33,15 +35,18 @@ const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
     'Cybersecurity',
   ];
 
+  // have to send the course preferences to the backend and retrieve the user info on the backend
+
+  const router = useRouter();
   const handleEditProfile = (field: string) => {
     toast.info('Edit profile feature coming soon!');
   };
 
   const handleRegenerateProfile = () => {
-    navigate('/onboarding');
+    router.push('/edit-profile');
   };
 
-  const handleGenerateCourse = () => {
+  const handleGenerateCourse = async () => {
     if (!selectedLanguage || !selectedFocus) {
       toast.error('Please select both language and focus area');
       return;
@@ -49,12 +54,39 @@ const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
 
     // Show confirmation before generating
     setIsGenerating(true);
-    
-    // Simulate AI generation with progress
-    setTimeout(() => {
+
+    try {
+      const res = await fetch('http://localhost:8000/create-curriculum-outline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          preferences: {
+            language: selectedLanguage,
+            focus: selectedFocus
+          },
+          userProfile: userProfile
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to create course');
+      }
+
+      const result = await res.json();
       toast.success('Course generated successfully!');
-      navigate(`/courses/${selectedLanguage}`);
-    }, 3000);
+      const courseSlug = result.slug;
+      router.push(`/courses/${courseSlug}`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate course. Please try again.');
+      setIsGenerating(false);
+    }
+
+    // Simulate AI generation with progress
+    toast.success('Course generated successfully!');
+    router.push(`/courses/${selectedLanguage}`);
+
   };
 
 
@@ -81,7 +113,7 @@ const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-  
+
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Page Header */}
@@ -119,9 +151,9 @@ const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
             </div>
           </CardHeader>
           <CardContent>
-         
-         
-             <div className="grid sm:grid-cols-2 gap-4">
+
+
+            <div className="grid sm:grid-cols-2 gap-4">
               {[
                 { label: 'Background', value: userProfile.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
                 { label: 'Learning Goal', value: userProfile.goals[0], icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
@@ -153,8 +185,8 @@ const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
                   </div>
                 );
               })}
-            </div> 
-            
+            </div>
+
             {/* AI Ready Indicator */}
             <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 flex items-center gap-3">
               <div className="p-2 rounded-full bg-gradient-to-br from-primary to-secondary animate-pulse">
@@ -225,7 +257,7 @@ const CreateCourse = ({userProfile}: {userProfile: UserProfile}) => {
               <Sparkles className="w-5 h-5" />
               Looks Good → Generate Course
             </Button>
-            
+
             <div className="text-center">
               <Button
                 variant="link"
