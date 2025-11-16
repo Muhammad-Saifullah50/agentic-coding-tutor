@@ -211,7 +211,9 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       console.log("Final course:", result.course);
 
       toast.success('Your course has been successfully generated!');
-      router.push('/dashboard/my-courses');
+      // router.push(`/courses/${result.course.slug}` );
+      // have to save course in db 
+      // then get its id and then get the slug and then route
 
     } catch (error) {
       console.error(error);

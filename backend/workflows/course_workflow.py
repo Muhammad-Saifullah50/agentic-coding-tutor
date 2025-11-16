@@ -50,7 +50,6 @@ class CourseAgent:
             self.outline = json.loads(outline_str)
             workflow.logger.info("Parsed outline JSON successfully")
         except (json.JSONDecodeError, TypeError):
-            # If it's not valid JSON, store as-is
             self.outline = outline_str
             workflow.logger.info("Stored outline as string (not JSON)")
         
@@ -69,10 +68,10 @@ class CourseAgent:
         self.status = "GENERATING_COURSE"
         workflow.logger.info("Approval received. Generating full course...")
         
-        # Pass the original string, not the parsed dict
+        # Pass BOTH outline AND user_profile to the activity
         final_course = await workflow.execute_activity(
             "generate_course_activity",
-            args=[outline_str, user_profile],  # Use outline_str, not self.outline
+            args=[outline_str, user_profile],  # Pass both!
             start_to_close_timeout=timedelta(minutes=15),
             heartbeat_timeout=timedelta(seconds=30),
             retry_policy=RetryPolicy(

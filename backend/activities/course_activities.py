@@ -105,23 +105,30 @@ async def generate_outline_activity(language: str, focus: str, user_profile: Dic
 
 
 @activity.defn
-async def generate_course_activity(outline: Union[str, Dict[str, Any]], user_profile: Dict[str, Any]) -> str:
+async def generate_course_activity(outline_json: str, user_profile: Dict[str, Any]) -> str:
     """Generate full course content using AI agent."""
     activity.logger.info("🚀 Generating full course from outline")
-    activity.logger.info(f"Outline type: {type(outline)}")
+    activity.logger.info(f"Outline length: {len(outline_json)}")
+    activity.logger.info(f"User profile keys: {list(user_profile.keys())}")
     
     heartbeat_task = asyncio.create_task(periodic_heartbeat(10))
     
     try:
-        # Ensure outline is a string
-        outline_str = outline if isinstance(outline, str) else json.dumps(outline)
-        activity.logger.info(f"Outline string length: {len(outline_str)}")
+        # Parse the outline JSON to pass as structured data
+        outline_dict = json.loads(outline_json)
+        activity.logger.info(f"Parsed outline with keys: {list(outline_dict.keys())}")
         
-        # Run the agent
+        # Create a combined context with BOTH outline and user profile
+        context_data = {
+            "outline": outline_dict,
+            "user_profile": user_profile
+        }
+        
+        # Run the agent with the combined context
         final_course_result = await Runner.run(
             course_generation_agent,
-            input=f"Generate a detailed course using this outline: {outline_str}",
-            context=user_profile,
+            input=f"Generate a detailed course using the outline provided in the context.",
+            context=context_data,  # Pass combined context
         )
         
         activity.logger.info("✅ Agent execution completed")

@@ -122,6 +122,7 @@ async def generate_course(workflow_id: str, request: Request):
         print("⏳ Waiting for final course generation...")
         final_course = await handle.result()
 
+        
         print("🎉 Final course generated successfully!")
         return {"course": final_course}
     
