@@ -1,5 +1,7 @@
-from agents import Agent, RunContextWrapper
+from agents import Agent,tool, RunContextWrapper
 from schemas.user_profile_context import UserProfile
+from schemas.curriculum_outline import CurriculumOutline
+from models.gemini import gemini_model
 
 
 async def dynamic_instructions(
@@ -9,7 +11,7 @@ async def dynamic_instructions(
 
     base_instructions = """You are an expert curriculum designer specializing in creating personalized programming courses.
 Your task is to create a detailed course outline that precisely matches the student's background, learning style, and goals."""
-
+    print('CONTEXT', context.context)
     if not context or not context.context:
         return (
             base_instructions
@@ -22,14 +24,14 @@ Create a balanced curriculum that:
 5. Lists prerequisites clearly"""
         )
 
-    profile = context.context
+    profile = UserProfile(**context.context)
 
     # Map experience levels to instructional approaches
     experience_level = {
         "Beginner": "Start with absolute basics and fundamentals. Include many examples and hands-on practice.",
         "Intermediate": "Focus on intermediate concepts. Review basics briefly if needed.",
         "Advanced": "Emphasize advanced patterns and best practices. Include complex real-world scenarios.",
-}.get(profile.codingExperience, "Adapt difficulty progressively")
+    }.get(profile.codingExperience, "Adapt difficulty progressively")
 
     # Map learning speeds to content pacing
     learning_pace = {
@@ -99,7 +101,8 @@ learning objectives, and time estimates that align with the student's weekly ava
 
 
 curriculum_outline_agent = Agent(
-    name="curriculum_outline_agent", instructions=dynamic_instructions
-)
-# have to give it schema 
-# have to correckly check all fields also the pydantic models and user.ts
+    name="curriculum_outline_agent",
+    instructions=dynamic_instructions,
+    output_type=CurriculumOutline,
+    model=gemini_model
+    )

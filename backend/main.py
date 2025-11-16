@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from agents import enable_verbose_stdout_logging
@@ -6,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from utils.supabase_client import supabase
 from ai_agents.curriculum_outline_agent import curriculum_outline_agent
+from schemas.curriculum_outline import CurriculumOutline
 
 import mlflow
 
@@ -39,7 +41,7 @@ def root():
 
 
 
-@app.post("/create-curriculum-outline")
+@app.post("/create-curriculum")
 async def create_course(request: Request):
     try:
         body = await request.json()
@@ -47,17 +49,24 @@ async def create_course(request: Request):
         user_profile = body.get("userProfile")
 
         language = preferences.get("language")
-        focus = preferences.get("focus", )
+        focus = preferences.get("focus" )
 
         enable_verbose_stdout_logging()       
-        
-        result = await Runner.run(
-            curriculum_outline_agent,
-            input=f"Generate a curriculum outline on {language} for {focus}.",
-            context=user_profile
-            )
-
+        print('sending to openai')
+        result = await asyncio.wait_for(
+            Runner.run(
+                curriculum_outline_agent,
+                input=f"Generate a curriculum outline on {language} for {focus}.",
+                context=user_profile,
+            ),
+            timeout=180.0
+        )
+        print("Agent result:", result)
         return result.final_output
+
+    except asyncio.TimeoutError:
+        print("Agent request timed out.")
+        raise HTTPException(status_code=504, detail="Request timed out")
 
     except Exception as e:
         import traceback

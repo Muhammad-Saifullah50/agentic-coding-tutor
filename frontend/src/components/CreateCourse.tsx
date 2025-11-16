@@ -4,16 +4,26 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain, Edit2 } from 'lucide-react';
+import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain, Edit2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserProfile } from '@/types/user';
-
+import { CurriculumOutline } from '@/types/curriculum';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
 
 const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
+  const [generatedOutline, setGeneratedOutline] = useState<CurriculumOutline | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const languages = [
     { value: 'python', label: 'Python', color: 'from-blue-500 to-blue-600' },
@@ -35,8 +45,6 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     'Cybersecurity',
   ];
 
-  // have to send the course preferences to the backend and retrieve the user info on the backend
-
   const router = useRouter();
   const handleEditProfile = (field: string) => {
     toast.info('Edit profile feature coming soon!');
@@ -52,11 +60,10 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       return;
     }
 
-    // Show confirmation before generating
     setIsGenerating(true);
 
     try {
-      const res = await fetch('http://localhost:8000/create-curriculum-outline', {
+      const res = await fetch('http://localhost:8000/create-curriculum', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -74,19 +81,22 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       }
 
       const result = await res.json();
-      toast.success('Course generated successfully!');
-      const courseSlug = result.slug;
-      router.push(`/courses/${courseSlug}`);
+      console.log(result, 'Resutl')
+      setGeneratedOutline(result);
+      setIsDialogOpen(true);
+      toast.success('Course outline generated successfully!');
     } catch (error) {
       console.error(error);
       toast.error('Failed to generate course. Please try again.');
+    } finally {
       setIsGenerating(false);
     }
+  };
 
-    // Simulate AI generation with progress
-    toast.success('Course generated successfully!');
-    router.push(`/courses/${selectedLanguage}`);
-
+  const handleConfirmAndCreateCourse = () => {
+    if (generatedOutline) {
+      router.push(`/courses/${generatedOutline.slug}`);
+    }
   };
 
 
@@ -270,6 +280,53 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[625px] bg-background border-border/50 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gradient flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-primary" />
+              Your Personalized Course Outline
+            </DialogTitle>
+            <DialogDescription>
+              Here is the curriculum your AI tutor has generated for you.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold">{generatedOutline?.title}</h2>
+              {generatedOutline?.modules.map((module, index) => (
+                <div key={index} className="p-4 rounded-lg border border-border/50 bg-secondary/5">
+                  <h3 className="font-semibold text-lg mb-2">{module.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">{module.description}</p>
+                  <p className="text-xs text-muted-foreground font-medium mb-3">Duration: {module.duration}</p>
+                  <ul className="space-y-2">
+                    {module.lessons.map((lesson, lessonIndex) => (
+                      <li key={lessonIndex} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                        <div>
+                          <p className="font-medium text-sm">{lesson.title}</p>
+                          <p className="text-xs text-muted-foreground">{lesson.description}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-lg gap-2">
+              <X className="w-4 h-4" />
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmAndCreateCourse} className="btn-hero rounded-lg gap-2">
+              <Check className="w-4 h-4" />
+              Confirm & Create Course
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List,Optional
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -18,7 +18,7 @@ class UserProfile(BaseModel):
     timePerWeek: str
     preferredLanguage: str
     userId: str
-    courses: int
+    courses: Optional[int] = None
     onBoarded: bool
     imageUrl: str
 
