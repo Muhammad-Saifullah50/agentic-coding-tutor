@@ -1,4 +1,4 @@
-from agents import Agent,tool, RunContextWrapper
+from agents import Agent, RunContextWrapper
 from schemas.user_profile_context import UserProfile
 from schemas.curriculum_outline import CurriculumOutline
 from models.gemini import gemini_model
@@ -11,7 +11,7 @@ async def dynamic_instructions(
 
     base_instructions = """You are an expert curriculum designer specializing in creating personalized programming courses.
 Your task is to create a detailed course outline that precisely matches the student's background, learning style, and goals."""
-    print('CONTEXT', context.context)
+
     if not context or not context.context:
         return (
             base_instructions

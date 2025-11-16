@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -19,11 +19,18 @@ import {
 import { useRouter } from 'next/navigation';
 
 const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
   const [generatedOutline, setGeneratedOutline] = useState<CurriculumOutline | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  
+  // New state for polling
+  const [isPolling, setIsPolling] = useState(false);
+  
+  const router = useRouter();
 
   const languages = [
     { value: 'python', label: 'Python', color: 'from-blue-500 to-blue-600' },
@@ -45,7 +52,6 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     'Cybersecurity',
   ];
 
-  const router = useRouter();
   const handleEditProfile = (field: string) => {
     toast.info('Edit profile feature coming soon!');
   };
@@ -54,13 +60,91 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     router.push('/edit-profile');
   };
 
+  /**
+   * Poll the workflow status endpoint until the outline is ready
+   */
+  const pollWorkflowStatus = async (wfId: string) => {
+    const maxAttempts = 120; // Poll for up to 2 minutes
+    let attempts = 0;
+    
+    const poll = async (): Promise<void> => {
+      if (attempts >= maxAttempts) {
+        setIsLoading(false);
+        setIsPolling(false);
+        toast.error('Outline generation timed out. Please check if the Temporal worker is running.');
+        console.error('Polling timed out after', maxAttempts, 'attempts');
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:8000/workflow-status/${wfId}`);
+        
+        if (!res.ok) {
+          throw new Error('Failed to fetch workflow status');
+        }
+
+        const statusData = await res.json();
+        console.log(`Poll attempt ${attempts + 1}: Status =`, statusData.status);
+        
+        if (statusData.status === 'OUTLINE_READY' && statusData.outline) {
+          // Outline is ready!
+          console.log('✅ Outline received!', statusData.outline);
+          
+          // Parse outline if it's a string
+          let parsedOutline = statusData.outline;
+          if (typeof statusData.outline === 'string') {
+            try {
+              parsedOutline = JSON.parse(statusData.outline);
+              console.log('Parsed outline from JSON string');
+            } catch (e) {
+              console.error('Failed to parse outline JSON:', e);
+            }
+          }
+          
+          setGeneratedOutline(parsedOutline);
+          console.log('original', statusData.outline)
+          console.log(parsedOutline, 'parsed')
+          setIsDialogOpen(true);
+          setIsLoading(false);
+          setIsPolling(false);
+          toast.success('Course outline generated successfully!');
+          return;
+        }
+        
+        // Update loading message based on current status
+        if (statusData.status === 'GENERATING_OUTLINE') {
+          setLoadingMessage(`AI is crafting your personalized syllabus... (${attempts + 1}s)`);
+        } else if (statusData.status === 'STARTING') {
+          setLoadingMessage('Initializing AI agents...');
+        }
+        
+        // Status is still STARTING or GENERATING - poll again
+        attempts++;
+        setTimeout(() => poll(), 1000); // Poll every 1 second
+        
+      } catch (error) {
+        console.error('Polling error:', error);
+        // Continue polling on error, but show in console
+        attempts++;
+        setTimeout(() => poll(), 1000); // Retry on error
+      }
+    };
+
+    await poll();
+  };
+
+  /**
+   * Step 1: Start the workflow and begin polling
+   */
   const handleGenerateCourse = async () => {
     if (!selectedLanguage || !selectedFocus) {
       toast.error('Please select both language and focus area');
       return;
     }
 
-    setIsGenerating(true);
+    setIsLoading(true);
+    setIsPolling(true);
+    setLoadingMessage('Starting AI course generation...');
 
     try {
       const res = await fetch('http://localhost:8000/create-curriculum', {
@@ -77,30 +161,93 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || 'Failed to create course');
+        throw new Error(text || 'Failed to start course generation');
       }
 
       const result = await res.json();
-      console.log(result, 'Resutl')
-      setGeneratedOutline(result);
-      setIsDialogOpen(true);
-      toast.success('Course outline generated successfully!');
+      const wfId = result.workflow_id;
+      
+      setWorkflowId(wfId);
+      setLoadingMessage('AI is preparing your personalized syllabus...');
+      
+      // Start polling for the outline
+      await pollWorkflowStatus(wfId);
+      
     } catch (error) {
       console.error(error);
-      toast.error('Failed to generate course. Please try again.');
-    } finally {
-      setIsGenerating(false);
+      toast.error('Failed to start course generation. Please try again.');
+      setIsLoading(false);
+      setIsPolling(false);
+      setLoadingMessage('');
     }
   };
 
-  const handleConfirmAndCreateCourse = () => {
-    if (generatedOutline) {
-      router.push(`/courses/${generatedOutline.slug}`);
+  /**
+   * Step 2: Approve the outline and generate the full course
+   */
+  const handleConfirmAndCreateCourse = async () => {
+    if (!workflowId) {
+      toast.error('Workflow ID is missing. Please try again.');
+      return;
+    }
+
+    setIsDialogOpen(false);
+    setIsLoading(true);
+    setLoadingMessage('Generating your full course. This may take a moment...');
+
+    try {
+      const res = await fetch(`http://localhost:8000/generate-course/${workflowId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved: true }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to generate final course');
+      }
+
+      const result = await res.json();
+      console.log("Final course:", result.course);
+
+      toast.success('Your course has been successfully generated!');
+      router.push('/dashboard/my-courses');
+
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate final course. Please try again.');
+      setIsLoading(false);
+      setLoadingMessage('');
     }
   };
 
+  /**
+   * Handler for rejecting the outline
+   */
+  const handleRejectOutline = async () => {
+    if (!workflowId) {
+      toast.error('Workflow ID is missing. Please try again.');
+      return;
+    }
 
-  if (isGenerating) {
+    try {
+      await fetch(`http://localhost:8000/generate-course/${workflowId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved: false }),
+      });
+
+      setIsDialogOpen(false);
+      toast.info('Course generation cancelled. You can start over.');
+      
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to cancel course generation.');
+    }
+  };
+
+  // Loading screen for both workflow start and course generation
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="max-w-md w-full border-border/50 shadow-xl animate-scale-in">
@@ -110,11 +257,18 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
                 <Sparkles className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Generating Your Course</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              {isPolling ? 'Generating Outline' : 'Generating Full Course'}
+            </h2>
             <p className="text-muted-foreground mb-6">
-              AI is preparing your personalized syllabus...
+              {loadingMessage}
             </p>
             <Progress value={100} className="h-2" />
+            {isPolling && (
+              <p className="text-xs text-muted-foreground mt-4">
+                This usually takes 10-30 seconds...
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -123,8 +277,6 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Page Header */}
         <div className="mb-8 animate-fade-in text-center">
@@ -136,7 +288,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
           </p>
         </div>
 
-        {/* Learning Profile Section - Enhanced with icons */}
+        {/* Learning Profile Section */}
         <Card className="mb-8 border-border/50 shadow-lg animate-fade-in">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -161,8 +313,6 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
             </div>
           </CardHeader>
           <CardContent>
-
-
             <div className="grid sm:grid-cols-2 gap-4">
               {[
                 { label: 'Background', value: userProfile.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
@@ -281,6 +431,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
         </Card>
       </div>
 
+      {/* Dialog for Human-in-the-Loop approval */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[625px] bg-background border-border/50 shadow-2xl">
           <DialogHeader>
@@ -316,9 +467,9 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-lg gap-2">
+            <Button variant="outline" onClick={handleRejectOutline} className="rounded-lg gap-2">
               <X className="w-4 h-4" />
-              Cancel
+              Reject & Start Over
             </Button>
             <Button onClick={handleConfirmAndCreateCourse} className="btn-hero rounded-lg gap-2">
               <Check className="w-4 h-4" />
