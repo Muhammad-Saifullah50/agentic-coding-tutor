@@ -26,10 +26,10 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
   const [generatedOutline, setGeneratedOutline] = useState<CurriculumOutline | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
-  
+
   // New state for polling
   const [isPolling, setIsPolling] = useState(false);
-  
+
   const router = useRouter();
 
   const languages = [
@@ -66,7 +66,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
   const pollWorkflowStatus = async (wfId: string) => {
     const maxAttempts = 120; // Poll for up to 2 minutes
     let attempts = 0;
-    
+
     const poll = async (): Promise<void> => {
       if (attempts >= maxAttempts) {
         setIsLoading(false);
@@ -78,18 +78,18 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       try {
         const res = await fetch(`http://localhost:8000/workflow-status/${wfId}`);
-        
+
         if (!res.ok) {
           throw new Error('Failed to fetch workflow status');
         }
 
         const statusData = await res.json();
         console.log(`Poll attempt ${attempts + 1}: Status =`, statusData.status);
-        
+
         if (statusData.status === 'OUTLINE_READY' && statusData.outline) {
           // Outline is ready!
           console.log('✅ Outline received!', statusData.outline);
-          
+
           // Parse outline if it's a string
           let parsedOutline = statusData.outline;
           if (typeof statusData.outline === 'string') {
@@ -100,7 +100,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               console.error('Failed to parse outline JSON:', e);
             }
           }
-          
+
           setGeneratedOutline(parsedOutline);
           console.log('original', statusData.outline)
           console.log(parsedOutline, 'parsed')
@@ -110,18 +110,18 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
           toast.success('Course outline generated successfully!');
           return;
         }
-        
+
         // Update loading message based on current status
         if (statusData.status === 'GENERATING_OUTLINE') {
           setLoadingMessage(`AI is crafting your personalized syllabus... (${attempts + 1}s)`);
         } else if (statusData.status === 'STARTING') {
           setLoadingMessage('Initializing AI agents...');
         }
-        
+
         // Status is still STARTING or GENERATING - poll again
         attempts++;
         setTimeout(() => poll(), 1000); // Poll every 1 second
-        
+
       } catch (error) {
         console.error('Polling error:', error);
         // Continue polling on error, but show in console
@@ -166,13 +166,13 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       const result = await res.json();
       const wfId = result.workflow_id;
-      
+
       setWorkflowId(wfId);
       setLoadingMessage('AI is preparing your personalized syllabus...');
-      
+
       // Start polling for the outline
       await pollWorkflowStatus(wfId);
-      
+
     } catch (error) {
       console.error(error);
       toast.error('Failed to start course generation. Please try again.');
@@ -199,7 +199,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       const res = await fetch(`http://localhost:8000/generate-course/${workflowId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved: true }),
+        body: JSON.stringify({ approved: true, userId: userProfile.userId }),
       });
 
       if (!res.ok) {
@@ -208,8 +208,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       }
 
       const result = await res.json();
-      console.log("Final course:", result.course);
-
+      router.push(`/courses/${result.slug}`)
       toast.success('Your course has been successfully generated!');
       // router.push(`/courses/${result.course.slug}` );
       // have to save course in db 
@@ -241,7 +240,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       setIsDialogOpen(false);
       toast.info('Course generation cancelled. You can start over.');
-      
+
     } catch (error) {
       console.error(error);
       toast.error('Failed to cancel course generation.');

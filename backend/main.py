@@ -8,10 +8,13 @@ from temporalio.common import WorkflowIDReusePolicy
 
 from workflows.course_workflow import CourseAgent
 
+from actions.save_course import save_course
+from schemas.full_course import FullCourse
+
 app = FastAPI()
 temporal_client = None
 
-origins = ['*']
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 async def startup_event():
     global temporal_client
@@ -29,6 +33,7 @@ async def startup_event():
         "localhost:7233",
     )
     print("✅ FastAPI connected to Temporal server")
+
 
 # --- API Endpoint 1: Start Workflow ---
 @app.post("/create-curriculum")
@@ -79,12 +84,9 @@ async def get_workflow_status(workflow_id: str):
 
     try:
         handle = temporal_client.get_workflow_handle(workflow_id)
-        
+
         try:
-            status = await asyncio.wait_for(
-                handle.query("get_status"),
-                timeout=2.0
-            )
+            status = await asyncio.wait_for(handle.query("get_status"), timeout=2.0)
             print(f"📊 Status for {workflow_id}: {status['status']}")
             return status
         except asyncio.TimeoutError:
@@ -104,28 +106,36 @@ async def generate_course(workflow_id: str, request: Request):
     """
     if not temporal_client:
         raise HTTPException(status_code=503, detail="Temporal client not connected")
-    
+
     try:
         body = await request.json()
         approved = body.get("approved", True)
-        
+        user_id = body.get("userId")
+
         print(f"📝 Getting handle for workflow: {workflow_id}")
         handle = temporal_client.get_workflow_handle(workflow_id)
 
         print(f"✅ Sending approval update: {approved}")
-        update_result = await handle.execute_update(
-            "approve_outline",
-            args=(approved,)
-        )
+        update_result = await handle.execute_update("approve_outline", args=(approved,))
         print(f"✅ Update acknowledged: {update_result}")
 
         print("⏳ Waiting for final course generation...")
-        final_course = await handle.result()
 
-        
-        print("🎉 Final course generated successfully!")
-        return {"course": final_course}
-    
+        final_course: FullCourse = await handle.result()
+        print('Final ', final_course)
+        return {'course': final_course}
+        # saved = await save_course(final_course, user_id)
+
+        # if saved:
+        #     print("🎉 Final course generated and saved successfully!")
+        #     # saved contains the Supabase row
+        #     return {
+        #         "course": saved,           # full saved row
+        #         "slug": saved["slug"],     # for routing convenience
+        #         "id": saved["id"]          # optional unique identifier
+        #     }
+    # there are some oissues here 
+    # have to check if slug is enopugh foir specificity or ti sue uuid insted
     except Exception as e:
         print(f"❌ Error executing update/getting result: {e}")
         raise HTTPException(status_code=500, detail=str(e))
