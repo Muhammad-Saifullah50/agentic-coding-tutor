@@ -1,7 +1,7 @@
 'use client';
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { LessonSidebar, Lesson } from "@/components/course/LessonSidebar";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { LessonSidebar, Module } from "@/components/course/LessonSidebar";
 import { LessonContent } from "@/components/course/LessonContent";
 import { LessonQuiz } from "@/components/course/LessonQuiz";
 import { LessonPlayground } from "@/components/course/LessonPlayground";
@@ -9,28 +9,31 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-
-const Course = ({courseData}) => {
-
-  console.log(courseData)
-  
+const Course = ({ courseData }) => {
   const router = useRouter();
-  const [currentLessonId, setCurrentLessonId] = useState("1");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const course = courseData[courseId || ""] || courseData.python;
-  const lessons: Lesson[] = course.lessons;
+  const course = courseData?.course_data;
+
+  const modules: Module[] = useMemo(() => course?.modules || [], [course]);
+  const lessons = useMemo(() => modules.flatMap(m => m.lessons), [modules]);
+
+  const [currentLessonId, setCurrentLessonId] = useState(lessons[0]?.id);
+
   const currentLesson = lessons.find((l) => l.id === currentLessonId) || lessons[0];
 
   const handleLessonComplete = () => {
     const lessonIndex = lessons.findIndex((l) => l.id === currentLessonId);
     if (lessonIndex !== -1) {
+      // This will mutate the lesson object which is shared with the modules structure
       lessons[lessonIndex].completed = true;
       
       // Unlock next lesson
       if (lessonIndex + 1 < lessons.length) {
         lessons[lessonIndex + 1].locked = false;
       }
+      // Force a re-render by updating the state, as direct mutation won't be detected
+      setCurrentLessonId(currentLessonId);
     }
   };
 
@@ -46,6 +49,8 @@ const Course = ({courseData}) => {
   };
 
   const renderLessonContent = () => {
+    if (!currentLesson) return null;
+
     switch (currentLesson.type) {
       case "content":
         return (
@@ -89,6 +94,10 @@ const Course = ({courseData}) => {
     }
   };
 
+  if (!course) {
+    return <div>Loading course...</div>;
+  }
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
@@ -113,13 +122,13 @@ const Course = ({courseData}) => {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] p-0">
               <LessonSidebar
-                lessons={lessons}
+                modules={modules}
                 currentLessonId={currentLessonId}
                 onLessonSelect={(id) => {
                   setCurrentLessonId(id);
                   setSidebarOpen(false);
                 }}
-                courseName={course.name}
+                courseName={course.title}
               />
             </SheetContent>
           </Sheet>
@@ -131,10 +140,10 @@ const Course = ({courseData}) => {
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-80 border-r border-border overflow-hidden">
           <LessonSidebar
-            lessons={lessons}
+            modules={modules}
             currentLessonId={currentLessonId}
             onLessonSelect={setCurrentLessonId}
-            courseName={course.name}
+            courseName={course.title}
           />
         </aside>
 
