@@ -14,7 +14,9 @@ from openai import AsyncOpenAI
 
 from workflows.course_workflow import CourseAgent
 from activities.course_activities import generate_outline_activity, generate_course_activity
-
+import json
+from actions.save_course import save_course
+from schemas.full_course import FullCourse
 load_dotenv()
 
 # Global variables
@@ -165,6 +167,7 @@ async def get_workflow_status(workflow_id: str):
 
 
 # --- API Endpoint 3: Approve & Get Final Course ---
+
 @app.post("/generate-course/{workflow_id}")
 async def generate_course(workflow_id: str, request: Request):
     """
@@ -176,6 +179,10 @@ async def generate_course(workflow_id: str, request: Request):
     try:
         body = await request.json()
         approved = body.get("approved", True)
+        user_id = body.get("userId")  # Get user_id from request
+        
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
         
         print(f"📝 Getting handle for workflow: {workflow_id}")
         handle = temporal_client.get_workflow_handle(workflow_id)
@@ -188,13 +195,28 @@ async def generate_course(workflow_id: str, request: Request):
         print(f"✅ Update acknowledged: {update_result}")
 
         print("⏳ Waiting for final course generation...")
-        final_course = await handle.result()
+        final_course_json = await handle.result()
 
         print("🎉 Final course generated successfully!")
-        return {"course": final_course}
+        
+        # Parse the JSON string to FullCourse object
+        final_course_dict = json.loads(final_course_json) if isinstance(final_course_json, str) else final_course_json
+        final_course = FullCourse(**final_course_dict)
+        
+        # Save to Supabase
+        print(f"💾 Saving course to database for user: {user_id}")
+        saved_course = await save_course(final_course, user_id)
+        print(f"✅ Course saved with ID: {saved_course['course_id']}")
+        
+        return {
+            "course_id": saved_course['course_id'],
+            "message": "Course generated and saved successfully!"
+        }
     
     except Exception as e:
         print(f"❌ Error executing update/getting result: {e}")
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 

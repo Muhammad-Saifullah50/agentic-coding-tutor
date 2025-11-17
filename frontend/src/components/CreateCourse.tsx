@@ -208,12 +208,10 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       }
 
       const result = await res.json();
-      const parsedCourse = JSON.parse(result.course)
+      const parsedCourseId = result.course_id
 
-      router.push(`/courses/${parsedCourse.slug}`)
+      router.push(`/courses/${parsedCourseId}`)
       toast.success('Your course has been successfully generated!');
-      // have to save course in db 
-      // then get its id and then get the slug and then route
 
     } catch (error) {
       console.error(error);
