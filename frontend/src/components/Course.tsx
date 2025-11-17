@@ -1,15 +1,18 @@
 'use client';
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LessonSidebar, Module } from "@/components/course/LessonSidebar";
+import { LessonSidebar } from "@/components/course/LessonSidebar";
 import { LessonContent } from "@/components/course/LessonContent";
 import { LessonQuiz } from "@/components/course/LessonQuiz";
 import { LessonPlayground } from "@/components/course/LessonPlayground";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { FullCourseData } from "@/types/course";
+import { Module } from "@/types/course";
+import { updateCourseProgress } from "@/actions/course.actions";
 
-const Course = ({ courseData }) => {
+const Course = ({ courseData }: {courseData: FullCourseData}) => {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -20,11 +23,18 @@ const Course = ({ courseData }) => {
 
   const [currentLessonId, setCurrentLessonId] = useState(lessons[0]?.id);
 
+  useEffect(() => {
+    const firstIncompleteLesson = lessons.find(lesson => !lesson.completed);
+    if (firstIncompleteLesson && firstIncompleteLesson.id !== currentLessonId) {
+      setCurrentLessonId(firstIncompleteLesson.id);
+    }
+  }, [lessons, currentLessonId, router, courseData.course_id]);
+
   const currentLesson = lessons.find((l) => l.id === currentLessonId) || lessons[0];
 
-  const handleLessonComplete = () => {
+  const handleLessonComplete = async () => {
     const lessonIndex = lessons.findIndex((l) => l.id === currentLessonId);
-    if (lessonIndex !== -1) {
+    if (lessonIndex !== -1 && !lessons[lessonIndex].completed) {
       // This will mutate the lesson object which is shared with the modules structure
       lessons[lessonIndex].completed = true;
       
@@ -32,9 +42,12 @@ const Course = ({ courseData }) => {
       if (lessonIndex + 1 < lessons.length) {
         lessons[lessonIndex + 1].locked = false;
       }
-      // Force a re-render by updating the state, as direct mutation won't be detected
-      setCurrentLessonId(currentLessonId);
+      
+      if (courseData && course) {
+        await updateCourseProgress(courseData.course_id, course);
+      }
     }
+    handleNext();
   };
 
   const handleNext = () => {

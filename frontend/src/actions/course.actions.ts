@@ -18,3 +18,31 @@ export async function getCourseByCourseId(courseId: string) {
 
   return data;
 }
+
+export async function getUserCourses(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from('Course')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching user courses:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function updateCourseProgress(courseId: string, courseData: any) {
+  const { data, error } = await supabaseAdmin
+    .from('Course')
+    .update({ course_data: courseData })
+    .eq('course_id', courseId);
+
+  if (error) {
+    console.error('Error updating course progress:', error);
+    return null;
+  }
+
+  return data;
+}

@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles } from "lucide-react";
 import aiMentor from "./../../public/ai-mentor.jpg";
-import { UserButton } from "@clerk/nextjs";
 
 const Dashboard = () => {
   // Mock data - will be replaced with real data

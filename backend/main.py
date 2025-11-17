@@ -115,6 +115,7 @@ async def create_curriculum(request: Request):
         user_profile = body.get("userProfile", {})
         language = preferences.get("language")
         focus = preferences.get("focus")
+        additionalNotes = preferences.get('additionalNotes')
 
         if not language or not focus:
             raise HTTPException(status_code=400, detail="Missing 'language' or 'focus'")
@@ -124,7 +125,7 @@ async def create_curriculum(request: Request):
 
         await temporal_client.start_workflow(
             CourseAgent.create_course,
-            args=(language, focus, user_profile),
+            args=(language, focus, user_profile, additionalNotes),
             id=workflow_id,
             task_queue="my-task-queue",
             id_reuse_policy=WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,

@@ -2,38 +2,9 @@ import { CheckCircle2, Circle, Lock, PlayCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Module } from '@/types/course'
+import React, { useRef, useEffect } from "react";
 
-export interface Lesson {
-  id: string;
-  title: string;
-  type: "content" | "quiz" | "playground";
-  duration: string;
-  completed: boolean;
-  locked: boolean;
-  // Content lesson properties
-  content?: string;
-  codeExample?: string;
-  // Quiz lesson properties
-  questions?: Array<{
-    id: string;
-    question: string;
-    options: string[];
-    correctAnswer: number;
-    explanation: string;
-  }>;
-  // Playground lesson properties
-  description?: string;
-  language?: string;
-  starterCode?: string;
-  challenge?: string;
-  hints?: string[];
-}
-
-export interface Module {
-  title: string;
-  description: string;
-  lessons: Lesson[];
-}
 
 interface LessonSidebarProps {
   modules: Module[];
@@ -51,7 +22,16 @@ export const LessonSidebar = ({
   const allLessons = modules.flatMap(m => m.lessons);
   const totalLessons = allLessons.length;
   const completedLessons = allLessons.filter(l => l.completed).length;
+  const lessonRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
 
+  useEffect(() => {
+    const currentLessonRef = lessonRefs.current.get(currentLessonId);
+    if (currentLessonRef) {
+      currentLessonRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentLessonId]);
+
+console.log(modules, 'asASa')
   return (
     <Card className="h-full flex flex-col">
       <div className="p-6 border-b border-border">
@@ -74,6 +54,7 @@ export const LessonSidebar = ({
                   return (
                     <button
                       key={lesson.id}
+                      ref={el => lessonRefs.current.set(lesson.id, el)}
                       onClick={() => canAccess && onLessonSelect(lesson.id)}
                       disabled={!canAccess}
                       className={cn(
@@ -93,7 +74,7 @@ export const LessonSidebar = ({
                             <Circle className="w-5 h-5 text-muted-foreground" />
                           )}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-medium text-muted-foreground">

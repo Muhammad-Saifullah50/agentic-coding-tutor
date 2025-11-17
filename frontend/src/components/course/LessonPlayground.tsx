@@ -4,6 +4,7 @@ import Editor from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, RotateCcw, ChevronRight, CheckCircle2 } from "lucide-react";
+import ReactMarkdown from 'react-markdown'
 
 interface LessonPlaygroundProps {
   title: string;
@@ -58,7 +59,12 @@ export const LessonPlayground = ({
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Challenge</h3>
                 <Card className="p-4 bg-primary/5 border-primary/20">
-                  <p className="text-sm text-foreground">{challenge}</p>
+                  <p className="text-sm text-foreground">
+                    <ReactMarkdown>
+
+                    {challenge}
+                    </ReactMarkdown>
+                    </p>
                 </Card>
               </div>
 
@@ -121,6 +127,7 @@ export const LessonPlayground = ({
                 onChange={(value) => setCode(value || "")}
                 theme="vs-dark"
                 options={{
+                  padding: {top: 10},
                   minimap: { enabled: false },
                   fontSize: 14,
                   lineNumbers: "on",

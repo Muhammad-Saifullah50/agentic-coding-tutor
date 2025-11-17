@@ -1,16 +1,16 @@
-import Courses from '@/components/Courses'
-// import { createClient } from '@/utils/supabase/server'
-// import { redirect } from 'next/navigation'
 
+import { getUserCourses } from '@/actions/course.actions'
+import Courses from '@/components/Courses'
+import { currentUser } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
 const MyCoursesPage = async () => {
-  // const supabase = await createClient()
-  // const { data, error } = await supabase.auth.getUser()
-  // if (error || !data?.user) {
-  //   redirect('/login')
-  // }
+  const user = await currentUser()
+
+  if (!user) redirect('/login')
+  const courses = await getUserCourses(user?.id)
   return (
-    <Courses />
+    <Courses courses={courses} />
   )
 }
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain, Edit2, Check, X } from 'lucide-react';
+import { Sparkles, RefreshCw, User, Code2, Target, Clock, Brain, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserProfile } from '@/types/user';
 import { CurriculumOutline } from '@/types/curriculum';
@@ -16,6 +16,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from 'next/navigation';
 
 const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
@@ -26,6 +34,8 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
   const [generatedOutline, setGeneratedOutline] = useState<CurriculumOutline | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const [editableProfile, setEditableProfile] = useState(userProfile);
+  const [additionalNotes, setAdditionalNotes] = useState('');
 
   // New state for polling
   const [isPolling, setIsPolling] = useState(false);
@@ -52,12 +62,24 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     'Cybersecurity',
   ];
 
-  const handleEditProfile = (field: string) => {
-    toast.info('Edit profile feature coming soon!');
+  const profileOptions = {
+    goals: ['Career Change', 'Skill Enhancement', 'Build Projects', 'Start a Business', 'Learn for Fun', 'Academic Purpose'],
+    codingExperience: ['Beginner', 'Some Practice', 'Intermediate', 'Advanced'],
+    techBackground: ['Non-Tech', 'Tech-Adjacent', 'Technical'],
+    educationLevel: ['High School', 'College', 'Graduate', 'Self-taught'],
+    ageRange: ['18-25', '26-35', '36-45', '46+'],
+    learningSpeed: ['Take it slow', 'Moderate pace', 'Fast track'],
+    learningMode: ['More Theory', 'Balanced', 'More Practice'],
+    timePerWeek: ['1-3 hours', '3-5 hours', '5-10 hours', '10+ hours'],
+    preferredLanguage: ['English', 'Spanish', 'French', 'German', 'Chinese', 'Japanese'],
   };
 
-  const handleRegenerateProfile = () => {
-    router.push('/edit-profile');
+  const handleProfileChange = (field: keyof UserProfile, value: string) => {
+    setEditableProfile(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGoalChange = (value: string) => {
+    setEditableProfile(prev => ({ ...prev, goals: [value] }));
   };
 
   /**
@@ -153,9 +175,10 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
         body: JSON.stringify({
           preferences: {
             language: selectedLanguage,
-            focus: selectedFocus
+            focus: selectedFocus,
+            additionalNotes: additionalNotes,
           },
-          userProfile: userProfile
+          userProfile: editableProfile
         }),
       });
 
@@ -296,30 +319,22 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
                 <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-secondary">
                   <User className="w-5 h-5 text-white" />
                 </div>
-                <div>
+                <div className='flex flex-col gap-1'>
                   <CardTitle>Your Learning Profile</CardTitle>
                   <CardDescription>AI is ready to personalize your course!</CardDescription>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRegenerateProfile}
-                className="rounded-xl gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">Regenerate</span>
-              </Button>
+            
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { label: 'Background', value: userProfile.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
-                { label: 'Learning Goal', value: userProfile.goals[0], icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
-                { label: 'Time Commitment', value: userProfile.timePerWeek, icon: Clock, color: 'from-accent/10 to-accent/5 border-accent/20' },
-                { label: 'Learning Style', value: userProfile.learningMode, icon: Brain, color: 'from-primary/10 to-secondary/5 border-primary/20' },
-                { label: 'Age Range', value: userProfile.ageRange, icon: User, color: 'from-secondary/10 to-accent/5 border-secondary/20' },
+                { label: 'Background', value: editableProfile.techBackground, field: 'techBackground', options: profileOptions.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
+                { label: 'Learning Goal', value: editableProfile.goals[0], field: 'goals', options: profileOptions.goals, icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
+                { label: 'Time Commitment', value: editableProfile.timePerWeek, field: 'timePerWeek', options: profileOptions.timePerWeek, icon: Clock, color: 'from-accent/10 to-accent/5 border-accent/20' },
+                { label: 'Learning Style', value: editableProfile.learningMode, field: 'learningMode', options: profileOptions.learningMode, icon: Brain, color: 'from-primary/10 to-secondary/5 border-primary/20' },
+                { label: 'Age Range', value: editableProfile.ageRange, field: 'ageRange', options: profileOptions.ageRange, icon: User, color: 'from-secondary/10 to-accent/5 border-secondary/20' },
               ].map(item => {
                 const IconComponent = item.icon;
                 return (
@@ -329,19 +344,33 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <IconComponent className="w-5 h-5 text-primary" />
-                      <div>
+                      <div className="w-full">
                         <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
-                        <p className="font-medium text-sm">{item.value}</p>
+                        {item.options && item.field ? (
+                          <Select
+                            value={item.value}
+                            onValueChange={(value) => {
+                              if (item.field === 'goals') {
+                                handleGoalChange(value);
+                              } else {
+                                handleProfileChange(item.field as keyof UserProfile, value);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-full bg-transparent border-none p-0 h-auto font-medium text-sm focus:ring-0">
+                              <SelectValue placeholder={`Select ${item.label}`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {item.options.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <p className="font-medium text-sm">{item.value}</p>
+                        )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditProfile(item.label)}
-                      className="rounded-full h-8 w-8 flex-shrink-0"
-                    >
-                      <Edit2 className="w-3 h-3" />
-                    </Button>
                   </div>
                 );
               })}
@@ -352,7 +381,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               <div className="p-2 rounded-full bg-gradient-to-br from-primary to-secondary animate-pulse">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <p className="text-sm font-medium">Your AI tutor is ready to create a personalized learning experience!</p>
+              <p className="text-sm font-medium">These changes will only take effect for your current course generation</p>
             </div>
           </CardContent>
         </Card>
@@ -364,7 +393,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               <div className="p-2 rounded-xl bg-secondary/10">
                 <Sparkles className="w-5 h-5 text-secondary" />
               </div>
-              <div>
+              <div className='flex flex-col gap-1'>
                 <CardTitle>Course Configuration</CardTitle>
                 <CardDescription>Choose your programming focus</CardDescription>
               </div>
@@ -408,6 +437,18 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               </div>
             </div>
 
+            {/* Additional Notes */}
+            <div>
+              <label htmlFor="additionalNotes" className="text-sm font-medium mb-3 block">Additional Notes</label>
+              <Textarea
+                id="additionalNotes"
+                placeholder="Write any additional notes for course generation..."
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+
             {/* Generate Button */}
             <Button
               onClick={handleGenerateCourse}
@@ -418,15 +459,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               Looks Good → Generate Course
             </Button>
 
-            <div className="text-center">
-              <Button
-                variant="link"
-                onClick={handleRegenerateProfile}
-                className="text-sm text-muted-foreground"
-              >
-                Edit Info
-              </Button>
-            </div>
+    
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Dict, Any, Union
+from typing import Dict, Any
 from temporalio import activity
 from agents import Runner
 from ai_agents.curriculum_outline_agent import curriculum_outline_agent
@@ -58,7 +58,7 @@ def pydantic_to_json(obj: Any) -> str:
 
 
 @activity.defn
-async def generate_outline_activity(language: str, focus: str, user_profile: Dict[str, Any]) -> str:
+async def generate_outline_activity(language: str, focus: str, user_profile: Dict[str, Any], additionalNotes:str) -> str:
     """Generate curriculum outline using AI agent."""
     activity.logger.info(f"🚀 Generating outline for {language} - {focus}")
     
@@ -68,7 +68,7 @@ async def generate_outline_activity(language: str, focus: str, user_profile: Dic
         # Run the agent
         outline_result = await Runner.run(
             curriculum_outline_agent,
-            input=f"Generate a curriculum outline on {language} for {focus}.",
+            input=f"Generate a curriculum outline on {language} for {focus}. Keep in mind these additional notes: {additionalNotes}",
             context=user_profile,
         )
         
@@ -105,7 +105,7 @@ async def generate_outline_activity(language: str, focus: str, user_profile: Dic
 
 
 @activity.defn
-async def generate_course_activity(outline_json: str, user_profile: Dict[str, Any]) -> str:
+async def generate_course_activity(outline_json: str, user_profile: Dict[str, Any], additionalNotes:str) -> str:
     """Generate full course content using AI agent."""
     activity.logger.info("🚀 Generating full course from outline")
     activity.logger.info(f"Outline length: {len(outline_json)}")
@@ -121,7 +121,8 @@ async def generate_course_activity(outline_json: str, user_profile: Dict[str, An
         # Create a combined context with BOTH outline and user profile
         context_data = {
             "outline": outline_dict,
-            "user_profile": user_profile
+            "user_profile": user_profile,
+            "additionalNotes": additionalNotes
         }
         
         # Run the agent with the combined context
@@ -137,6 +138,19 @@ async def generate_course_activity(outline_json: str, user_profile: Dict[str, An
         output = final_course_result.final_output
         activity.logger.info(f"final_output type: {type(output)}")
         activity.logger.info(f"final_output class name: {output.__class__.__name__}")
+        
+        # Lock all lessons by default
+        if hasattr(output, 'modules'):
+            for module in output.modules:
+                if hasattr(module, 'lessons'):
+                    for lesson in module.lessons:
+                        if hasattr(lesson, 'locked'):
+                            lesson.locked = True
+        
+        # Unlock the first lesson
+        if hasattr(output, 'modules') and output.modules and hasattr(output.modules[0], 'lessons') and output.modules[0].lessons:
+            if hasattr(output.modules[0].lessons[0], 'locked'):
+                output.modules[0].lessons[0].locked = False
         
         # Convert Pydantic model to JSON
         json_output = pydantic_to_json(output)

@@ -2,7 +2,7 @@
 
 import { supabaseAdmin } from "../utils/supabase/admin";
 
-export const getUserDetails = async (userId?: string) => {
+export const getUserDetails = async (userId: string) => {
   if (!userId) return null;
 
     const { data, error } = await supabaseAdmin
