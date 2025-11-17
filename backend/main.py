@@ -2,19 +2,92 @@ import asyncio
 import uuid
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import os
+from dotenv import load_dotenv
 
 from temporalio.client import Client
+from temporalio.worker import Worker
 from temporalio.common import WorkflowIDReusePolicy
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from openai import AsyncOpenAI
 
 from workflows.course_workflow import CourseAgent
+from activities.course_activities import generate_outline_activity, generate_course_activity
 
-from actions.save_course import save_course
-from schemas.full_course import FullCourse
+load_dotenv()
 
-app = FastAPI()
+# Global variables
 temporal_client = None
+worker_task = None
 
-origins = ["*"]
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup and shutdown events for FastAPI."""
+    global temporal_client, worker_task
+    
+    # Startup: Connect to Temporal and start worker
+    print("🚀 Starting up FastAPI application...")
+    
+    # Create Gemini client for the worker
+    base_url = os.getenv('GEMINI_BASE_URL')
+    api_key = os.getenv('GEMINI_API_KEY')
+    
+    if not base_url or not api_key:
+        raise ValueError("GEMINI_BASE_URL or GEMINI_API_KEY not set in .env")
+    
+    gemini_client = AsyncOpenAI(
+        api_key=api_key,
+        base_url=base_url,
+    )
+    print("✅ Gemini client configured")
+    
+    # Connect to Temporal
+    temporal_client = await Client.connect(
+        "localhost:7233",
+        plugins=[
+            OpenAIAgentsPlugin(
+                model_provider=gemini_client
+            )
+        ],
+    )
+    print("✅ Connected to Temporal server")
+    
+    # Create and start worker in background
+    worker = Worker(
+        temporal_client,
+        task_queue="my-task-queue",
+        workflows=[CourseAgent],
+        activities=[generate_outline_activity, generate_course_activity],
+    )
+    
+    print("🔧 Starting Temporal worker...")
+    print("📋 Task queue: 'my-task-queue'")
+    print("🤖 Using Gemini model")
+    print("📦 Workflows:", [CourseAgent.__name__])
+    print("⚡ Activities:", [generate_outline_activity.__name__, generate_course_activity.__name__])
+    
+    # Start worker in background task
+    worker_task = asyncio.create_task(worker.run())
+    print("✅ Temporal worker started in background")
+    
+    yield  # FastAPI runs here
+    
+    # Shutdown: Stop worker and close connections
+    print("\n🛑 Shutting down...")
+    if worker_task:
+        worker_task.cancel()
+        try:
+            await worker_task
+        except asyncio.CancelledError:
+            print("✅ Worker stopped")
+    
+    print("👋 Shutdown complete")
+
+
+app = FastAPI(lifespan=lifespan)
+
+origins = ['*']
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,16 +96,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    global temporal_client
-    # ⚠️ REMOVED OpenAIAgentsPlugin - it should only be in the worker!
-    temporal_client = await Client.connect(
-        "localhost:7233",
-    )
-    print("✅ FastAPI connected to Temporal server")
 
 
 # --- API Endpoint 1: Start Workflow ---
@@ -84,9 +147,12 @@ async def get_workflow_status(workflow_id: str):
 
     try:
         handle = temporal_client.get_workflow_handle(workflow_id)
-
+        
         try:
-            status = await asyncio.wait_for(handle.query("get_status"), timeout=2.0)
+            status = await asyncio.wait_for(
+                handle.query("get_status"),
+                timeout=2.0
+            )
             print(f"📊 Status for {workflow_id}: {status['status']}")
             return status
         except asyncio.TimeoutError:
@@ -106,36 +172,29 @@ async def generate_course(workflow_id: str, request: Request):
     """
     if not temporal_client:
         raise HTTPException(status_code=503, detail="Temporal client not connected")
-
+    
     try:
         body = await request.json()
         approved = body.get("approved", True)
-        user_id = body.get("userId")
-
+        
         print(f"📝 Getting handle for workflow: {workflow_id}")
         handle = temporal_client.get_workflow_handle(workflow_id)
 
         print(f"✅ Sending approval update: {approved}")
-        update_result = await handle.execute_update("approve_outline", args=(approved,))
+        update_result = await handle.execute_update(
+            "approve_outline",
+            args=(approved,)
+        )
         print(f"✅ Update acknowledged: {update_result}")
 
         print("⏳ Waiting for final course generation...")
+        final_course = await handle.result()
 
-        final_course: FullCourse = await handle.result()
-        print('Final ', final_course)
-        return {'course': final_course}
-        # saved = await save_course(final_course, user_id)
-
-        # if saved:
-        #     print("🎉 Final course generated and saved successfully!")
-        #     # saved contains the Supabase row
-        #     return {
-        #         "course": saved,           # full saved row
-        #         "slug": saved["slug"],     # for routing convenience
-        #         "id": saved["id"]          # optional unique identifier
-        #     }
-    # there are some oissues here 
-    # have to check if slug is enopugh foir specificity or ti sue uuid insted
+        print("🎉 Final course generated successfully!")
+        return {"course": final_course}
+    
     except Exception as e:
         print(f"❌ Error executing update/getting result: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
