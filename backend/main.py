@@ -133,6 +133,8 @@ async def create_curriculum(request: Request):
         workflow_id = f"course-gen-{uuid.uuid4()}"
         print(f"🚀 Starting workflow: {workflow_id}")
 
+        agentops.start_trace(tags=[f"Course Generation {workflow_id}"])
+
         await temporal_client.start_workflow(
             CourseAgent.create_course,
             args=(language, focus, user_profile, additionalNotes),

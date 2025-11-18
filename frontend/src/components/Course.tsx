@@ -21,16 +21,15 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
   const modules: Module[] = useMemo(() => course?.modules || [], [course]);
   const lessons = useMemo(() => modules.flatMap(m => m.lessons), [modules]);
 
-  const [currentLessonId, setCurrentLessonId] = useState(lessons[0]?.id);
-
-  useEffect(() => {
+  const [currentLessonId, setCurrentLessonId] = useState(() => {
     const firstIncompleteLesson = lessons.find(lesson => !lesson.completed);
-    if (firstIncompleteLesson && firstIncompleteLesson.id !== currentLessonId) {
-      setCurrentLessonId(firstIncompleteLesson.id);
-    }
-  }, [lessons, currentLessonId, router, courseData.course_id]);
+    return firstIncompleteLesson?.id || lessons[0]?.id;
+  });
 
   const currentLesson = lessons.find((l) => l.id === currentLessonId) || lessons[0];
+  const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
+  const nextLesson = lessons[currentIndex + 1];
+  const isNextLessonLocked = !nextLesson || nextLesson.locked;
 
   const handleLessonComplete = async () => {
     const lessonIndex = lessons.findIndex((l) => l.id === currentLessonId);
@@ -51,10 +50,8 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
   };
 
   const handleNext = () => {
-    const currentIndex = lessons.findIndex((l) => l.id === currentLessonId);
     if (currentIndex < lessons.length - 1) {
-      const nextLesson = lessons[currentIndex + 1];
-      if (!nextLesson.locked) {
+      if (!isNextLessonLocked) {
         setCurrentLessonId(nextLesson.id);
         setSidebarOpen(false);
       }
@@ -74,6 +71,7 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
             onComplete={handleLessonComplete}
             onNext={handleNext}
             isCompleted={currentLesson.completed}
+            isNextLessonLocked={isNextLessonLocked}
           />
         );
       
@@ -84,6 +82,7 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
             questions={currentLesson.questions}
             onComplete={handleLessonComplete}
             onNext={handleNext}
+            isNextLessonLocked={isNextLessonLocked}
           />
         );
       
@@ -99,6 +98,7 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
             onComplete={handleLessonComplete}
             onNext={handleNext}
             isCompleted={currentLesson.completed}
+            isNextLessonLocked={isNextLessonLocked}
           />
         );
       

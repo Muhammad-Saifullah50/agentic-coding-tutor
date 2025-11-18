@@ -20,6 +20,7 @@ interface LessonQuizProps {
   questions: Question[];
   onComplete: () => void;
   onNext: () => void;
+  isNextLessonLocked: boolean;
 }
 
 export const LessonQuiz = ({
@@ -27,6 +28,7 @@ export const LessonQuiz = ({
   questions,
   onComplete,
   onNext,
+  isNextLessonLocked,
 }: LessonQuizProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -179,7 +181,11 @@ export const LessonQuiz = ({
             Submit Answer
           </Button>
         ) : (
-          <Button onClick={handleNext} className="gap-2 ml-auto">
+          <Button
+            onClick={handleNext}
+            disabled={isLastQuestion && isNextLessonLocked}
+            className="gap-2 ml-auto"
+          >
             {isLastQuestion ? "Complete Quiz" : "Next Question"}
             <ChevronRight className="w-4 h-4" />
           </Button>

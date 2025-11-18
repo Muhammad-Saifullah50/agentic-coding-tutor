@@ -14,6 +14,7 @@ interface LessonContentProps {
   onComplete: () => void;
   onNext: () => void;
   isCompleted: boolean;
+  isNextLessonLocked: boolean;
 }
 
 export const LessonContent = ({
@@ -23,6 +24,7 @@ export const LessonContent = ({
   onComplete,
   onNext,
   isCompleted,
+  isNextLessonLocked,
 }: LessonContentProps) => {
   return (
     <div className="h-full flex flex-col">
@@ -71,7 +73,7 @@ export const LessonContent = ({
           </div>
         )}
 
-        <Button onClick={onNext} className="gap-2 ml-auto">
+        <Button onClick={onNext} disabled={isNextLessonLocked} className="gap-2 ml-auto">
           Next Lesson
           <ChevronRight className="w-4 h-4" />
         </Button>

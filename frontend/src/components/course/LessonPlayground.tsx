@@ -16,6 +16,7 @@ interface LessonPlaygroundProps {
   onComplete: () => void;
   onNext: () => void;
   isCompleted: boolean;
+  isNextLessonLocked: boolean;
 }
 
 export const LessonPlayground = ({
@@ -28,6 +29,7 @@ export const LessonPlayground = ({
   onComplete,
   onNext,
   isCompleted,
+  isNextLessonLocked,
 }: LessonPlaygroundProps) => {
   const [code, setCode] = useState(starterCode);
   const [aiReview, setAiReview] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export const LessonPlayground = ({
           </div>
         )}
         
-        <Button onClick={onNext} className="gap-2 ml-auto">
+        <Button onClick={onNext} disabled={isNextLessonLocked} className="gap-2 ml-auto">
           Next Lesson
           <ChevronRight className="w-4 h-4" />
         </Button>

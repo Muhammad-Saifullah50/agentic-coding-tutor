@@ -33,7 +33,19 @@ export default async function RootLayout({
               <div className="min-h-screen bg-background pt-20">
               {children}
               </div>
-              <Toaster />
+              <Toaster
+                toastOptions={{
+                  classNames: {
+                    toast: 'bg-background text-foreground border-border',
+                    title: 'text-foreground',
+                    description: 'text-muted-foreground',
+                    actionButton: 'bg-primary text-primary-foreground',
+                    cancelButton: 'bg-muted text-muted-foreground',
+                    success: 'text-green-500',
+                    error: 'text-red-500',
+                  },
+                }}
+              />
             </main>
           </ThemeProvider>
         </body>

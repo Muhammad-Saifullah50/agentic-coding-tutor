@@ -49,7 +49,7 @@ console.log(modules, 'asASa')
               <div className="space-y-2">
                 {module.lessons.map((lesson, lessonIndex) => {
                   const isActive = lesson.id === currentLessonId;
-                  const canAccess = !lesson.locked;
+                  const canAccess = !lesson.locked || lesson.completed;
 
                   return (
                     <button
