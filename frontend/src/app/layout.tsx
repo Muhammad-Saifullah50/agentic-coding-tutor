@@ -1,5 +1,5 @@
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { Toaster } from '@/components/ui/toaster'
+import { Toaster } from 'sonner'
 import '../globals.css'
 import {
   ClerkProvider

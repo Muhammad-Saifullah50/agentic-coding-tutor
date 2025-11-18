@@ -6,14 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Code2, Sparkles, Target, Brain, Clock, CheckCircle2, Edit2 } from 'lucide-react';
 import { updateUserProfile } from '@/actions/profile.actions';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const Onboarding = ({userId}: {userId: string}) => {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-
-  const { toast } = useToast()
 
   const [formData, setFormData] = useState({
 
@@ -51,26 +49,21 @@ const handleComplete = async () => {
 
     if (!result.success) {
 
-      toast({
-        title: 'Error updating profile',
+      toast.error('Error updating profile', {
         description: 'Something went wrong while updating your profile. Please try again.',
-        variant: 'destructive',
       });
       return;
     }
 
-    toast({
-      title: 'Profile Created',
+    toast.success('Profile Created', {
       description: 'Your personalized learning profile has been created successfully!',
     });
 
     router.push('/dashboard');
   } catch (error) {
     console.error(error);
-    toast({
-      title: 'Error',
+    toast.error('Error', {
       description: 'An unexpected error occurred while creating profile.',
-      variant: 'destructive',
     });
   } finally {
     setIsGenerating(false);

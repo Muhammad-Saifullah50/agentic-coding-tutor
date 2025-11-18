@@ -17,11 +17,18 @@ from activities.course_activities import generate_outline_activity, generate_cou
 import json
 from actions.save_course import save_course
 from schemas.full_course import FullCourse
+import agentops
 load_dotenv()
+
+
+AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
+
+agentops.init()
 
 # Global variables
 temporal_client = None
 worker_task = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,6 +38,7 @@ async def lifespan(app: FastAPI):
     # Startup: Connect to Temporal and start worker
     print("🚀 Starting up FastAPI application...")
     
+
     # Create Gemini client for the worker
     base_url = os.getenv('GEMINI_BASE_URL')
     api_key = os.getenv('GEMINI_API_KEY')
@@ -49,12 +57,14 @@ async def lifespan(app: FastAPI):
         "localhost:7233",
         plugins=[
             OpenAIAgentsPlugin(
-                model_provider=gemini_client
+                model_provider=gemini_client,
+                
             )
         ],
     )
     print("✅ Connected to Temporal server")
     
+
     # Create and start worker in background
     worker = Worker(
         temporal_client,
