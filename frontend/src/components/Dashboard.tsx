@@ -7,31 +7,28 @@ import { Progress } from "@/components/ui/progress";
 import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles } from "lucide-react";
 import aiMentor from "./../../public/ai-mentor.jpg";
 
-const Dashboard = () => {
+import { FullCourseData } from "@/types/course";
+
+interface DashboardProps {
+  courses: FullCourseData[];
+}
+
+const Dashboard = ({ courses }: DashboardProps) => {
   // Mock data - will be replaced with real data
+  const coursesData = courses.map(course => course.course_data);
+
   const userProgress = {
     currentStreak: 7,
     totalXP: 1250,
-    coursesInProgress: 2,
-    lessonsCompleted: 24,
+    coursesInProgress: coursesData.length,
+    lessonsCompleted: coursesData.reduce((acc, course) => {
+      return acc + course.modules.reduce((lessonAcc, module) => {
+        return lessonAcc + module.lessons.filter(lesson => lesson.completed).length;
+      }, 0);
+    }, 0),
   };
 
-  const recentCourses = [
-    {
-      id: 1,
-      name: "Python Fundamentals",
-      progress: 65,
-      language: "Python",
-      color: "text-blue-500",
-    },
-    {
-      id: 2,
-      name: "JavaScript Basics",
-      progress: 40,
-      language: "JavaScript",
-      color: "text-yellow-500",
-    },
-  ];
+  
 
   return (
     <div className="min-h-screen bg-background ">
@@ -116,26 +113,35 @@ const Dashboard = () => {
                 <CardDescription>Pick up where you left off</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentCourses.map((course) => (
-                  <div key={course.id} className="p-4 rounded-xl border border-border hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold mb-1">{course.name}</h4>
-                        <p className={`text-sm ${course.color}`}>{course.language}</p>
+                {coursesData.map((course) => {
+                  const totalLessons = course.modules.reduce((acc, module) => acc + module.lessons.length, 0);
+                  const completedLessons = course.modules.reduce((acc, module) => {
+                    return acc + module.lessons.filter(lesson => lesson.completed).length;
+                  }, 0);
+                  const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+                  return (
+                    <div key={course.course_id} className="p-4 rounded-xl border border-border hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold mb-1">{course.title}</h4>
+                        </div>
+                        <Link href={`/courses/${course.slug}`}>
+                          <Button size="sm" className="btn-hero rounded-lg">
+                            Continue
+                          </Button>
+                        </Link>
                       </div>
-                      <Button size="sm" className="btn-hero rounded-lg">
-                        Continue
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{course.progress}%</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-medium">{progress}%</span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
                       </div>
-                      <Progress value={course.progress} className="h-2" />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
 
@@ -156,7 +162,7 @@ const Dashboard = () => {
                   </Button>
                 </Link>
                 <Link href="/playground" className="block">
-                  <Button 
+                  < Button 
                     variant="outline" 
                     className="w-full h-24 flex-col gap-2 hover:border-accent hover:bg-accent/5 rounded-xl"
                   >
