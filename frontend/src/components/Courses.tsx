@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Code2, ArrowLeft, Clock, BookOpen } from "lucide-react";
-import { FullCourse, FullCourseData } from "@/types/course";
+import { FullCourseData } from "@/types/course";
 
 const Courses = ({ courses }: { courses: FullCourseData[] }) => {
   console.log(courses)
@@ -40,27 +40,7 @@ const getTotalDuration = (course: FullCourseData) => {
 
   return (
     <div className="min-h-screen bg-background">
-
-      {/* Top Navigation */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/" className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Code2 className="w-6 h-6 text-primary" />
-                </div>
-                <span className="text-xl font-bold hidden sm:inline">AI Coding Tutor</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+    
 
       {/* Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">

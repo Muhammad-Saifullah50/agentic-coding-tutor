@@ -3,7 +3,7 @@ import { useState } from "react";
 import Editor from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, RotateCcw, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, RotateCcw, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown'
 
 interface LessonPlaygroundProps {
@@ -13,10 +13,11 @@ interface LessonPlaygroundProps {
   starterCode: string;
   challenge: string;
   hints: string[];
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
   onNext: () => void;
   isCompleted: boolean;
   isNextLessonLocked: boolean;
+  isLoading: boolean;
 }
 
 export const LessonPlayground = ({
@@ -30,9 +31,11 @@ export const LessonPlayground = ({
   onNext,
   isCompleted,
   isNextLessonLocked,
+  isLoading,
 }: LessonPlaygroundProps) => {
   const [code, setCode] = useState(starterCode);
   const [aiReview, setAiReview] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const handleReset = () => {
     setCode(starterCode);
@@ -42,6 +45,12 @@ export const LessonPlayground = ({
   const handleAiReview = () => {
     // Placeholder for AI review functionality
     setAiReview("Great start! Your code structure looks good. Consider adding error handling for edge cases.");
+  };
+
+  const handleCompleteClick = async () => {
+    setIsCompleting(true);
+    await onComplete();
+    setIsCompleting(false);
   };
 
   return (
@@ -147,11 +156,12 @@ export const LessonPlayground = ({
       <div className="flex items-center justify-between gap-4 p-6 border-t border-border bg-card">
         {!isCompleted && (
           <Button
-            onClick={onComplete}
+            onClick={handleCompleteClick}
             variant="outline"
             className="gap-2"
+            disabled={isCompleting || isLoading}
           >
-            <CheckCircle2 className="w-4 h-4" />
+            {isCompleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Mark as Complete
           </Button>
         )}
@@ -162,7 +172,8 @@ export const LessonPlayground = ({
           </div>
         )}
         
-        <Button onClick={onNext} disabled={isNextLessonLocked} className="gap-2 ml-auto">
+        <Button onClick={onNext} disabled={isNextLessonLocked || isLoading} className="gap-2 ml-auto">
+          {isLoading && !isCompleting && <Loader2 className="w-4 h-4 animate-spin" />}
           Next Lesson
           <ChevronRight className="w-4 h-4" />
         </Button>

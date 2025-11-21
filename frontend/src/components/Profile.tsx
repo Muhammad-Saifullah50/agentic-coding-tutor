@@ -79,7 +79,7 @@ const Profile = ({ userProfile }: ProfileProps) => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Profile Header */}
-        <div className="mb-8 animate-fade-in text-center">
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -96,7 +96,7 @@ const Profile = ({ userProfile }: ProfileProps) => {
 
         <div className="space-y-6">
           {/* Personal Info */}
-          <Card className="border-border/50 shadow-lg animate-fade-in">
+          <Card className="border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -136,7 +136,7 @@ const Profile = ({ userProfile }: ProfileProps) => {
           </Card>
 
           {/* Learning Preferences */}
-          <Card className="border-border/50 shadow-lg animate-fade-in">
+          <Card className="border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ const Profile = ({ userProfile }: ProfileProps) => {
           </Card>
 
           {/* Progress Overview */}
-          <Card className="border-border/50 shadow-lg animate-fade-in">
+          <Card className="border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-accent/10">
@@ -240,7 +240,7 @@ const Profile = ({ userProfile }: ProfileProps) => {
           </Card>
 
           {/* Subscription & Billing */}
-          <Card className="border-border/50 shadow-lg animate-fade-in bg-gradient-to-br from-primary/5 to-secondary/5">
+          <Card className="border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both bg-gradient-to-br from-primary/5 to-secondary/5">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-secondary">

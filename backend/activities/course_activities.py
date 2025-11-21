@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import Dict, Any
 from temporalio import activity
-from agents import Runner
+from agents import Runner, InputGuardrailTripwireTriggered, OutputGuardrailTripwireTriggered
 from ai_agents.curriculum_outline_agent import curriculum_outline_agent
 from ai_agents.course_generation_agent import course_generation_agent
 import mlflow
@@ -92,6 +92,15 @@ async def generate_outline_activity(language: str, focus: str, user_profile: Dic
         
         return json_output
         
+    except InputGuardrailTripwireTriggered as e:
+        activity.logger.error(f"⛔ Input guardrail tripped: {e}")
+        # Return a structured error or raise a specific application error
+        # For now, let's return a JSON with error info so the workflow can handle it
+        return json.dumps({
+            "error": "Input guardrail triggered",
+            "message": "Your request contains disallowed content or is not relevant to programming.",
+            "details": str(e)
+        })
     except Exception as e:
         activity.logger.error(f"❌ Error in generate_outline_activity: {e}")
         import traceback
@@ -162,6 +171,13 @@ async def generate_course_activity(outline_json: str, user_profile: Dict[str, An
         
         return json_output
         
+    except OutputGuardrailTripwireTriggered as e:
+        activity.logger.error(f"⛔ Output guardrail tripped: {e}")
+        return json.dumps({
+            "error": "Output guardrail triggered",
+            "message": "The generated content did not meet safety or quality standards.",
+            "details": str(e)
+        })
     except Exception as e:
         activity.logger.error(f"❌ Error in generate_course_activity: {e}")
         import traceback

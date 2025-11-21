@@ -3,6 +3,7 @@ from schemas.curriculum_outline import CurriculumOutline
 from schemas.full_course import FullCourse
 from schemas.user_profile_context import UserProfile
 from models.gemini import gemini_model
+from ai_agents.guardrails import validate_course_content
 
 async def dynamic_instructions(
     context: RunContextWrapper, agent: Agent
@@ -102,5 +103,6 @@ course_generation_agent = Agent(
     instructions=dynamic_instructions,
     output_type=FullCourse,
     model=gemini_model,
+    output_guardrails=[validate_course_content],
 )
 

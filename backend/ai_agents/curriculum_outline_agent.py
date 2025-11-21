@@ -2,6 +2,7 @@ from agents import Agent, RunContextWrapper
 from schemas.user_profile_context import UserProfile
 from schemas.curriculum_outline import CurriculumOutline
 from models.gemini import gemini_model
+from ai_agents.guardrails import validate_course_request
 
 
 async def dynamic_instructions(
@@ -104,5 +105,6 @@ curriculum_outline_agent = Agent(
     name="curriculum_outline_agent",
     instructions=dynamic_instructions,
     output_type=CurriculumOutline,
-    model=gemini_model
+    model=gemini_model,
+    input_guardrails=[validate_course_request],
     )

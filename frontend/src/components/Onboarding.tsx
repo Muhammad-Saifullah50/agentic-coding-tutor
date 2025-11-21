@@ -8,7 +8,7 @@ import { Code2, Sparkles, Target, Brain, Clock, CheckCircle2, Edit2 } from 'luci
 import { updateUserProfile } from '@/actions/profile.actions';
 import { toast } from 'sonner';
 
-const Onboarding = ({userId}: {userId: string}) => {
+const Onboarding = ({ userId }: { userId: string }) => {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -41,34 +41,34 @@ const Onboarding = ({userId}: {userId: string}) => {
     if (step > 0) setStep(step - 1);
   };
 
-const handleComplete = async () => {
-  try {
-    setIsGenerating(true);
+  const handleComplete = async () => {
+    try {
+      setIsGenerating(true);
 
-    const result = await updateUserProfile(formData, userId);
+      const result = await updateUserProfile(formData, userId);
 
-    if (!result.success) {
+      if (!result.success) {
 
-      toast.error('Error updating profile', {
-        description: 'Something went wrong while updating your profile. Please try again.',
+        toast.error('Error updating profile', {
+          description: 'Something went wrong while updating your profile. Please try again.',
+        });
+        return;
+      }
+
+      toast.success('Profile Created', {
+        description: 'Your personalized learning profile has been created successfully!',
       });
-      return;
+
+      router.push('/dashboard');
+    } catch (error) {
+      console.error(error);
+      toast.error('Error', {
+        description: 'An unexpected error occurred while creating profile.',
+      });
+    } finally {
+      setIsGenerating(false);
     }
-
-    toast.success('Profile Created', {
-      description: 'Your personalized learning profile has been created successfully!',
-    });
-
-    router.push('/dashboard');
-  } catch (error) {
-    console.error(error);
-    toast.error('Error', {
-      description: 'An unexpected error occurred while creating profile.',
-    });
-  } finally {
-    setIsGenerating(false);
-  }
-};
+  };
 
   const toggleGoal = (goal: string) => {
     setFormData(prev => ({
@@ -103,7 +103,7 @@ const handleComplete = async () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-8 px-4">
       <div className="container max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8 animate-fade-in">
+        <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <div className="flex justify-center mb-4">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-primary to-secondary">
               <Code2 className="w-8 h-8 text-white" />
@@ -123,7 +123,7 @@ const handleComplete = async () => {
         </div>
 
         {/* Step Content */}
-        <Card className="border-border/50 shadow-xl animate-fade-in">
+        <Card className="border-border/50 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <CardHeader>
             {step === 0 && (
               <>

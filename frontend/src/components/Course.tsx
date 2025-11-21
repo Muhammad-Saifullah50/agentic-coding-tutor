@@ -6,7 +6,7 @@ import { LessonContent } from "@/components/course/LessonContent";
 import { LessonQuiz } from "@/components/course/LessonQuiz";
 import { LessonPlayground } from "@/components/course/LessonPlayground";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Menu } from "lucide-react";
+import { Menu } from "lucide-react"; // Removed ArrowLeft
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FullCourseData } from "@/types/course";
 import { Module } from "@/types/course";
@@ -31,22 +31,46 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
   const nextLesson = lessons[currentIndex + 1];
   const isNextLessonLocked = !nextLesson || nextLesson.locked;
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleLessonComplete = async () => {
     const lessonIndex = lessons.findIndex((l) => l.id === currentLessonId);
-    if (lessonIndex !== -1 && !lessons[lessonIndex].completed) {
-      // This will mutate the lesson object which is shared with the modules structure
-      lessons[lessonIndex].completed = true;
-      
-      // Unlock next lesson
-      if (lessonIndex + 1 < lessons.length) {
-        lessons[lessonIndex + 1].locked = false;
-      }
-      
-      if (courseData && course) {
-        await updateCourseProgress(courseData.course_id, course);
-      }
+    if (lessonIndex === -1 || lessons[lessonIndex].completed) {
+      handleNext();
+      return;
     }
-    handleNext();
+
+    setIsLoading(true);
+
+    const updatedLessons = lessons.map((lesson, idx) => {
+      if (idx === lessonIndex) {
+        return { ...lesson, completed: true };
+      }
+      if (idx === lessonIndex + 1 && lessonIndex + 1 < lessons.length) {
+        return { ...lesson, locked: false };
+      }
+      return lesson;
+    });
+
+    const updatedModules = modules.map(module => ({
+      ...module,
+      lessons: module.lessons.map(lesson => {
+        const updatedLesson = updatedLessons.find(ul => ul.id === lesson.id);
+        return updatedLesson || lesson;
+      })
+    }));
+
+    const updatedCourse = {
+      ...course,
+      modules: updatedModules,
+    };
+
+    if (courseData && updatedCourse) {
+      await updateCourseProgress(courseData.course_id, updatedCourse);
+      router.refresh(); // Re-fetch data to reflect completed lesson and unlocked next lesson
+    }
+
+    setIsLoading(false);
   };
 
   const handleNext = () => {
@@ -56,6 +80,11 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
         setSidebarOpen(false);
       }
     }
+  };
+
+  const handleQuizComplete = async () => {
+    await handleLessonComplete();
+    handleNext();
   };
 
   const renderLessonContent = () => {
@@ -72,6 +101,7 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
             onNext={handleNext}
             isCompleted={currentLesson.completed}
             isNextLessonLocked={isNextLessonLocked}
+            isLoading={isLoading}
           />
         );
       
@@ -80,9 +110,10 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
           <LessonQuiz
             title={currentLesson.title}
             questions={currentLesson.questions}
-            onComplete={handleLessonComplete}
+            onComplete={handleQuizComplete}
             onNext={handleNext}
             isNextLessonLocked={isNextLessonLocked}
+            isLoading={isLoading}
           />
         );
       
@@ -99,6 +130,7 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
             onNext={handleNext}
             isCompleted={currentLesson.completed}
             isNextLessonLocked={isNextLessonLocked}
+            isLoading={isLoading}
           />
         );
       
@@ -113,22 +145,23 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push("/courses")}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Back to Courses</span>
-          </Button>
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:block w-80 border-r border-border overflow-hidden">
+          <LessonSidebar
+            modules={modules}
+            currentLessonId={currentLessonId}
+            onLessonSelect={setCurrentLessonId}
+            courseName={course.title}
+          />
+        </aside>
 
+        {/* Lesson Content */}
+        <main className="flex-1 overflow-hidden">
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="lg:hidden gap-2">
+              <Button variant="outline" size="sm" className="lg:hidden gap-2 m-4">
                 <Menu className="w-4 h-4" />
                 Lessons
               </Button>
@@ -145,23 +178,6 @@ const Course = ({ courseData }: {courseData: FullCourseData}) => {
               />
             </SheetContent>
           </Sheet>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-80 border-r border-border overflow-hidden">
-          <LessonSidebar
-            modules={modules}
-            currentLessonId={currentLessonId}
-            onLessonSelect={setCurrentLessonId}
-            courseName={course.title}
-          />
-        </aside>
-
-        {/* Lesson Content */}
-        <main className="flex-1 overflow-hidden">
           {renderLessonContent()}
         </main>
       </div>

@@ -250,7 +250,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Page Header */}
-        <div className="mb-8 animate-fade-in text-center">
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both text-center">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">
             Confirm Your <span className="text-gradient">Learning Profile</span> ✨
           </h1>
@@ -260,7 +260,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
         </div>
 
         {/* Learning Profile Section */}
-        <Card className="mb-8 border-border/50 shadow-lg animate-fade-in">
+        <Card className="mb-8 border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -272,7 +272,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
                   <CardDescription>AI is ready to personalize your course!</CardDescription>
                 </div>
               </div>
-            
+
             </div>
           </CardHeader>
           <CardContent>
@@ -337,7 +337,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
         </Card>
 
         {/* Course Configuration */}
-        <Card className="border-border/50 shadow-lg animate-fade-in">
+        <Card className="border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-secondary/10">
@@ -409,7 +409,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               Looks Good → Generate Course
             </Button>
 
-    
+
           </CardContent>
         </Card>
       </div>

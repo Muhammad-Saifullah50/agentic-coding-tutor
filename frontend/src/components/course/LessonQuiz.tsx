@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Question {
@@ -19,8 +19,7 @@ interface LessonQuizProps {
   title: string;
   questions: Question[];
   onComplete: () => void;
-  onNext: () => void;
-  isNextLessonLocked: boolean;
+  isLoading: boolean;
 }
 
 export const LessonQuiz = ({
@@ -29,6 +28,7 @@ export const LessonQuiz = ({
   onComplete,
   onNext,
   isNextLessonLocked,
+  isLoading,
 }: LessonQuizProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -51,10 +51,12 @@ export const LessonQuiz = ({
     }
   };
 
+  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+
   const handleNext = () => {
     if (isLastQuestion) {
+      setIsQuizCompleted(true);
       onComplete();
-      onNext();
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
@@ -175,20 +177,31 @@ export const LessonQuiz = ({
         {!isSubmitted ? (
           <Button
             onClick={handleSubmit}
-            disabled={!selectedAnswer}
+            disabled={!selectedAnswer || isLoading}
             className="ml-auto"
           >
-            Submit Answer
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Answer"}
           </Button>
-        ) : (
+        ) : isQuizCompleted ? (
           <Button
-            onClick={handleNext}
-            disabled={isLastQuestion && isNextLessonLocked}
+            onClick={onNext}
+            disabled={isNextLessonLocked || isLoading}
             className="gap-2 ml-auto"
           >
-            {isLastQuestion ? "Complete Quiz" : "Next Question"}
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Next Lesson"}
             <ChevronRight className="w-4 h-4" />
           </Button>
+        ) : (
+          <div className="flex items-center gap-4 ml-auto">
+            <Button
+              onClick={handleNext}
+              disabled={!isSubmitted || isLoading}
+              className="gap-2"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isLastQuestion ? "Complete Quiz" : "Next Question")}
+              {!isLastQuestion && <ChevronRight className="w-4 h-4" />}
+            </Button>
+          </div>
         )}
       </div>
     </div>

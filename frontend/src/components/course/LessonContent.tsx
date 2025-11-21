@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { useState } from 'react';
 
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -11,10 +12,11 @@ interface LessonContentProps {
   title: string;
   content: string;
   codeExample?: string;
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
   onNext: () => void;
   isCompleted: boolean;
   isNextLessonLocked: boolean;
+  isLoading: boolean;
 }
 
 export const LessonContent = ({
@@ -25,7 +27,16 @@ export const LessonContent = ({
   onNext,
   isCompleted,
   isNextLessonLocked,
+  isLoading,
 }: LessonContentProps) => {
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const handleCompleteClick = async () => {
+    setIsCompleting(true);
+    await onComplete();
+    setIsCompleting(false);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <Card className="flex-1 p-6 md:p-8 overflow-auto">
@@ -58,11 +69,12 @@ export const LessonContent = ({
       <div className="flex items-center justify-between gap-4 p-6 border-t border-border bg-card">
         {!isCompleted && (
           <Button
-            onClick={onComplete}
+            onClick={handleCompleteClick}
             variant="outline"
             className="gap-2"
+            disabled={isCompleting || isLoading}
           >
-            <CheckCircle2 className="w-4 h-4" />
+            {isCompleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Mark as Complete
           </Button>
         )}
@@ -73,7 +85,8 @@ export const LessonContent = ({
           </div>
         )}
 
-        <Button onClick={onNext} disabled={isNextLessonLocked} className="gap-2 ml-auto">
+        <Button onClick={onNext} disabled={isNextLessonLocked || isLoading} className="gap-2 ml-auto">
+          {isLoading && !isCompleting && <Loader2 className="w-4 h-4 animate-spin" />}
           Next Lesson
           <ChevronRight className="w-4 h-4" />
         </Button>

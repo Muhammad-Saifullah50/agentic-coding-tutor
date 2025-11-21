@@ -89,7 +89,7 @@ const PricingPage = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-6xl">
         {/* Page Header */}
-        <div className="text-center mb-12 animate-fade-in">
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             Choose Your <span className="text-gradient">Learning Path</span> 🚀
           </h1>
@@ -105,9 +105,8 @@ const PricingPage = () => {
             return (
               <Card
                 key={plan.id}
-                className={`border-border/50 shadow-lg transition-all hover:shadow-xl animate-fade-in ${
-                  plan.highlighted ? 'ring-2 ring-primary scale-105 md:scale-110' : ''
-                }`}
+                className={`border-border/50 shadow-lg transition-all hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both ${plan.highlighted ? 'ring-2 ring-primary scale-105 md:scale-110' : ''
+                  }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {plan.badge && (
@@ -152,7 +151,7 @@ const PricingPage = () => {
         </div>
 
         {/* Footer Note */}
-        <div className="text-center text-sm text-muted-foreground animate-fade-in">
+        <div className="text-center text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <p className="mb-2">All plans include access to our AI coding playground and community</p>
           <p className="flex items-center justify-center gap-2 text-xs">
             <span>Powered by</span>

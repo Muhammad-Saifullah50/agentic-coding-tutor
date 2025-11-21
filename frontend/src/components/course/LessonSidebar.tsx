@@ -86,7 +86,7 @@ console.log(modules, 'asASa')
                           </div>
                           <h3 className={cn(
                             "font-medium text-sm mb-1",
-                            isActive ? "text-primary" : "text-foreground"
+                            isActive ? "text-foreground font-semibold" : "text-foreground"
                           )}>
                             {lesson.title}
                           </h3>

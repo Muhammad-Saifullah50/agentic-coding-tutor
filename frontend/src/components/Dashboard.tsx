@@ -17,14 +17,13 @@ interface DashboardProps {
 
 const Dashboard = ({ courses, userProfile }: DashboardProps) => {
 
-  const coursesData = courses.map(course => course.course_data);
 
   const userProgress = {
     currentStreak: userProfile?.streak || 0,
     totalXP: userProfile?.xp || 0,
-    coursesInProgress: coursesData.length,
-    lessonsCompleted: coursesData.reduce((acc, course) => {
-      return acc + course.modules.reduce((lessonAcc, module) => {
+    coursesInProgress: courses.length,
+    lessonsCompleted: courses.reduce((acc, fullCourse) => {
+      return acc + fullCourse.course_data.modules.reduce((lessonAcc, module) => {
         return lessonAcc + module.lessons.filter(lesson => lesson.completed).length;
       }, 0);
     }, 0),
@@ -37,7 +36,7 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="mb-8 animate-fade-in">
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold mb-2">
@@ -105,47 +104,61 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Continue Learning */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Play className="w-5 h-5" />
-                  Continue Learning
-                </CardTitle>
-                <CardDescription>Pick up where you left off</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {coursesData.map((course) => {
-                  const totalLessons = course.modules.reduce((acc, module) => acc + module.lessons.length, 0);
-                  const completedLessons = course.modules.reduce((acc, module) => {
-                    return acc + module.lessons.filter(lesson => lesson.completed).length;
-                  }, 0);
-                  const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+            {courses && courses.length > 0 ? (
+              <Card className="border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Play className="w-5 h-5" />
+                    Continue Learning
+                  </CardTitle>
+                  <CardDescription>Pick up where you left off</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {courses.map((fullCourse) => {
 
-                  return (
-                    <div key={course.course_id} className="p-4 rounded-xl border border-border hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold mb-1">{course.title}</h4>
+                    const course = fullCourse.course_data;
+                    const totalLessons = course.modules.reduce((acc, module) => acc + module.lessons.length, 0);
+                    const completedLessons = course.modules.reduce((acc, module) => {
+                      return acc + module.lessons.filter(lesson => lesson.completed).length;
+                    }, 0);
+                    const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+                    return (
+                      <div key={course.course_id} className="p-4 rounded-xl border border-border hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold mb-1">{course.title}</h4>
+                          </div>
+                          <Link href={`/courses/${fullCourse.course_id}`}>
+                            <Button size="sm" className="btn-hero rounded-lg">
+                              Continue
+                            </Button>
+                          </Link>
                         </div>
-                        <Link href={`/courses/${course.slug}`}>
-                          <Button size="sm" className="btn-hero rounded-lg">
-                            Continue
-                          </Button>
-                        </Link>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="font-medium">{progress}%</span>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Progress</span>
+                            <span className="font-medium">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-2" />
                         </div>
-                        <Progress value={progress} className="h-2" />
                       </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-border/50 p-6 text-center">
+                <h3 className="text-xl font-semibold mb-4">You haven't created any courses yet!</h3>
+                <p className="text-muted-foreground mb-6">Start your learning journey by creating your first course.</p>
+                <Link href="/courses/create">
+                  <Button className="btn-hero rounded-xl gap-2">
+                    <Sparkles className="w-5 h-5" />
+                    Create Your First Course
+                  </Button>
+                </Link>
+              </Card>
+            )}
 
             {/* Quick Actions */}
             <Card className="border-border/50">
