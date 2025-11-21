@@ -221,6 +221,10 @@ async def generate_course(workflow_id: str, request: Request):
         saved_course = await save_course(final_course, user_id)
         print(f"✅ Course saved with ID: {saved_course['course_id']}")
         
+        # Update Gamification (XP & Streak)
+        from utils.gamification import update_user_gamification
+        await update_user_gamification(user_id, xp_reward=50) # 50 XP for completing a course
+        
         return {
             "course_id": saved_course['course_id'],
             "message": "Course generated and saved successfully!"

@@ -8,18 +8,20 @@ import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles } from "lucide
 import aiMentor from "./../../public/ai-mentor.jpg";
 
 import { FullCourseData } from "@/types/course";
+import { UserProfile } from "@/types/user";
 
 interface DashboardProps {
   courses: FullCourseData[];
+  userProfile: UserProfile | null;
 }
 
-const Dashboard = ({ courses }: DashboardProps) => {
-  // Mock data - will be replaced with real data
+const Dashboard = ({ courses, userProfile }: DashboardProps) => {
+
   const coursesData = courses.map(course => course.course_data);
 
   const userProgress = {
-    currentStreak: 7,
-    totalXP: 1250,
+    currentStreak: userProfile?.streak || 0,
+    totalXP: userProfile?.xp || 0,
     coursesInProgress: coursesData.length,
     lessonsCompleted: coursesData.reduce((acc, course) => {
       return acc + course.modules.reduce((lessonAcc, module) => {
@@ -28,7 +30,7 @@ const Dashboard = ({ courses }: DashboardProps) => {
     }, 0),
   };
 
-  
+
 
   return (
     <div className="min-h-screen bg-background ">
@@ -153,8 +155,8 @@ const Dashboard = ({ courses }: DashboardProps) => {
               </CardHeader>
               <CardContent className="grid sm:grid-cols-3 gap-4">
                 <Link href="/courses" className="block">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full h-24 flex-col gap-2 hover:border-primary hover:bg-primary/5 rounded-xl"
                   >
                     <BookOpen className="w-6 h-6 text-primary" />
@@ -162,8 +164,8 @@ const Dashboard = ({ courses }: DashboardProps) => {
                   </Button>
                 </Link>
                 <Link href="/playground" className="block">
-                  < Button 
-                    variant="outline" 
+                  < Button
+                    variant="outline"
                     className="w-full h-24 flex-col gap-2 hover:border-accent hover:bg-accent/5 rounded-xl"
                   >
                     <Code2 className="w-6 h-6 text-accent" />
@@ -171,8 +173,8 @@ const Dashboard = ({ courses }: DashboardProps) => {
                   </Button>
                 </Link>
                 <Link href="/quiz" className="block">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full h-24 flex-col gap-2 hover:border-secondary hover:bg-secondary/5 rounded-xl"
                   >
                     <Trophy className="w-6 h-6 text-secondary" />
@@ -188,8 +190,8 @@ const Dashboard = ({ courses }: DashboardProps) => {
             {/* AI Mentor */}
             <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
               <CardContent className="p-6 text-center">
-                <img 
-                  src={aiMentor} 
+                <img
+                  src={aiMentor}
                   alt="AI Mentor"
                   className="w-32 h-32 mx-auto mb-4 rounded-2xl"
                 />

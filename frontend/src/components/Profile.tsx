@@ -7,7 +7,13 @@ import { Progress } from '@/components/ui/progress';
 import { Code2, ArrowLeft, Edit2, User, Target, Clock, Brain, Trophy, Award, Sparkles, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
-const Profile = () => {
+import { UserProfile } from '@/types/user';
+
+interface ProfileProps {
+  userProfile: UserProfile | null;
+}
+
+const Profile = ({ userProfile }: ProfileProps) => {
   const navigate = useNavigate();
   const [currentPlan] = useState('free'); // 'free', 'pro', 'premium'
 
@@ -18,6 +24,8 @@ const Profile = () => {
     topicsMastered: 5,
     totalLessons: 45,
     completionPercentage: 40,
+    streak: userProfile?.streak || 0,
+    xp: userProfile?.xp || 0,
   };
 
   const handleEditProfile = () => {
@@ -198,14 +206,15 @@ const Profile = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Stats Grid */}
+              {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-lg bg-primary/5">
-                  <div className="text-2xl font-bold text-primary mb-1">{progressData.hoursStudied}</div>
-                  <div className="text-xs text-muted-foreground">Hours Studied</div>
+                  <div className="text-2xl font-bold text-primary mb-1">{progressData.xp}</div>
+                  <div className="text-xs text-muted-foreground">Total XP</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-secondary/5">
-                  <div className="text-2xl font-bold text-secondary mb-1">{progressData.lessonsCompleted}</div>
-                  <div className="text-xs text-muted-foreground">Lessons Done</div>
+                  <div className="text-2xl font-bold text-secondary mb-1">{progressData.streak}</div>
+                  <div className="text-xs text-muted-foreground">Day Streak</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-accent/5">
                   <div className="text-2xl font-bold text-accent mb-1">{progressData.topicsMastered}</div>

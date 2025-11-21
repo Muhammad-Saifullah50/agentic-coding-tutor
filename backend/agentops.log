@@ -1,4 +1,4 @@
-2025-11-18 20:46:12,924 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
-2025-11-18 20:46:12,939 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
-2025-11-18 20:46:12,944 - INFO - Session Replay for default trace: https://app.agentops.ai/sessions?trace_id=96dc321fb8554cdaa72ca8df4191e194
-2025-11-18 20:46:14,361 - INFO - You're on the agentops free plan 🤔
+2025-11-21 12:31:04,641 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
+2025-11-21 12:31:04,651 - WARNING - [OPENAI INSTRUMENTOR] Error setting up OpenAI streaming wrappers: No module named 'openai.resources.beta.chat'
+2025-11-21 12:31:04,655 - INFO - Session Replay for default trace: https://app.agentops.ai/sessions?trace_id=e786ededde39a217bd9148899b7c81fc
+2025-11-21 12:31:05,726 - INFO - You're on the agentops free plan 🤔

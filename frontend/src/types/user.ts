@@ -13,6 +13,9 @@ export interface UserProfile {
   timePerWeek: string;
   preferredLanguage: string;
   userId: string;
+  xp?: number;
+  streak?: number;
+  last_activity_date?: string;
   courses: number;
   onBoarded: boolean;
   imageUrl: string;
