@@ -7,7 +7,7 @@ from agents import (
     input_guardrail,
     output_guardrail,
 )
-from models.gemini import gemini_model
+from models.gemini import  gemini_lite_model
 from schemas.curriculum_outline import CurriculumOutline
 from schemas.full_course import FullCourse
 
@@ -43,10 +43,11 @@ input_guardrail_agent = Agent(
     - Ensure the topic is an actual programming-related topic (e.g., Python, HTML, JavaScript, C++).
     - Reject requests not related to course generation.
     
+    The reasoning should be in a tone which can direclty be displayed to the user, like : 'Your input conatins illegal activities (hacking). Please correct you request. The reasoning should not exceed 15 words'
     Return a JSON object with is_safe, is_relevant, and reasoning.
     """,
     output_type=InputSafetyCheck,
-    model=gemini_model,
+    model=gemini_lite_model,
 )
 
 output_guardrail_agent = Agent(
@@ -70,7 +71,7 @@ output_guardrail_agent = Agent(
     Return a JSON object with is_safe, is_valid_structure, is_quality_content, and reasoning.
     """,
     output_type=OutputQualityCheck,
-    model=gemini_model,
+    model=gemini_lite_model,
 )
 
 # --- Guardrail Functions ---

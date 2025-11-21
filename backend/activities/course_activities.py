@@ -94,11 +94,28 @@ async def generate_outline_activity(language: str, focus: str, user_profile: Dic
         
     except InputGuardrailTripwireTriggered as e:
         activity.logger.error(f"⛔ Input guardrail tripped: {e}")
-        # Return a structured error or raise a specific application error
-        # For now, let's return a JSON with error info so the workflow can handle it
+        
+        # Extract reasoning from the guardrail output
+        reasoning = "Input guardrail triggered."
+        
+        try:
+            if hasattr(e, 'guardrail_result'):
+                result = e.guardrail_result
+                if hasattr(result, 'output'):
+                    output = result.output
+                    if hasattr(output, 'output_info'):
+                        info = output.output_info
+                        # Check if info is a dict or object
+                        if isinstance(info, dict):
+                            reasoning = info.get('reasoning', reasoning)
+                        elif hasattr(info, 'reasoning'):
+                            reasoning = info.reasoning
+        except Exception as ex:
+             activity.logger.error(f"Failed to extract reasoning: {ex}")
+
         return json.dumps({
             "error": "Input guardrail triggered",
-            "message": "Your request contains disallowed content or is not relevant to programming.",
+            "message": reasoning,
             "details": str(e)
         })
     except Exception as e:
@@ -173,9 +190,19 @@ async def generate_course_activity(outline_json: str, user_profile: Dict[str, An
         
     except OutputGuardrailTripwireTriggered as e:
         activity.logger.error(f"⛔ Output guardrail tripped: {e}")
+        
+        # Extract reasoning from the guardrail output
+        reasoning = "Output guardrail triggered."
+        if hasattr(e, 'guardrail_result'):
+             result = e.guardrail_result
+             if hasattr(result, 'output') and hasattr(result.output, 'output_info'):
+                 info = result.output.output_info
+                 if hasattr(info, 'reasoning'):
+                     reasoning = info.reasoning
+
         return json.dumps({
             "error": "Output guardrail triggered",
-            "message": "The generated content did not meet safety or quality standards.",
+            "message": reasoning,
             "details": str(e)
         })
     except Exception as e:

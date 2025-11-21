@@ -2,3 +2,4 @@
 docker-compose.yaml
 mlruns
 agentops.log
+.pyc

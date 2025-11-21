@@ -115,6 +115,16 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
             }
           }
 
+          // Check for guardrail error
+          if (parsedOutline.error) {
+            toast.error(parsedOutline.message || parsedOutline.error, {
+              id: toastId,
+              duration: 5000,
+              className: 'bg-destructive text-destructive-foreground',
+            });
+            return;
+          }
+
           setGeneratedOutline(parsedOutline);
           toast.success('Outline generated!', {
             id: toastId,
@@ -205,6 +215,31 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       }
 
       const result = await res.json();
+
+      // Check for guardrail error in final course generation
+      // Note: The backend might return the error directly or wrapped.
+      // Based on the activity, if it fails, it returns a JSON string with error.
+      // But here we are calling the temporal workflow which returns the result.
+      // If the activity returns an error JSON, it will be in `result`.
+
+      let parsedResult = result;
+      if (typeof result === 'string') {
+        try {
+          parsedResult = JSON.parse(result);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (parsedResult && parsedResult.error) {
+        toast.error(parsedResult.message || parsedResult.error, {
+          id: courseToastId,
+          duration: 5000,
+          className: 'bg-destructive text-destructive-foreground',
+        });
+        return;
+      }
+
       const parsedCourseId = result.course_id
 
       toast.success('Your course has been successfully generated!', {
