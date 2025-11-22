@@ -22,7 +22,7 @@ import json
 from actions.save_course import save_course
 from schemas.full_course import FullCourse
 from schemas.code_review_schemas import CodeReviewRequest, CodeReviewResponse
-import agentops
+# import agentops
 from agents import Runner, InputGuardrailTripwireTriggered
 from ai_agents.code_review_agent import code_review_agent, generate_instructions
 from schemas.mentor_schemas import MentorChatRequest, MentorChatResponse
@@ -33,9 +33,9 @@ import stripe
 from utils.stripe_utils import create_checkout_session, handle_webhook
 
 
-AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
+# AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
 
-agentops.init()
+# agentops.init()
 
 # Global variables
 temporal_client = None
@@ -150,7 +150,7 @@ async def create_curriculum(request: Request):
         workflow_id = f"course-gen-{uuid.uuid4()}"
         print(f"🚀 Starting workflow: {workflow_id}")
 
-        agentops.start_trace(tags=[f"Course Generation {workflow_id}"])
+        # agentops.start_trace(tags=[f"Course Generation {workflow_id}"])
 
         await temporal_client.start_workflow(
             CourseAgent.create_course,
@@ -263,7 +263,7 @@ async def review_code(request: CodeReviewRequest):
     """
     try:
         # Start AgentOps tracing
-        agentops.start_trace(tags=[f"Code Review {request.session_id}"])
+        # agentops.start_trace(tags=[f"Code Review {request.session_id}"])
         
         # Validate inputs
         if not request.code or not request.code.strip():
