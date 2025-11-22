@@ -21,6 +21,10 @@ class UserProfile(BaseModel):
     courses: Optional[int] = None
     onBoarded: bool
     imageUrl: str
+    subscription_plan: Optional[str] = None
+    credits: Optional[int] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
 
    
 

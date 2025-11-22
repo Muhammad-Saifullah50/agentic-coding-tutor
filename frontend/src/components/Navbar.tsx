@@ -1,14 +1,16 @@
 import Link from "next/link"
-import { Code2 } from "lucide-react"
+import { Code2, User } from "lucide-react"
 import MobileNav from "@/components/MobileNav"
 import { ThemeToggleButton } from "./ThemeToggleButton"
 import { UserProfile } from "@/types/user"
 import { Button } from "./ui/button"
-import { UserButton } from "@clerk/nextjs"
 import { Skeleton } from "./ui/skeleton"
-import { CourseBackButton } from "./CourseBackButton" // New import
+import { CourseBackButton } from "./CourseBackButton"
+import Image from "next/image"
 
-const Navbar = ({ user }: { user: UserProfile | null }) => { // Removed async keyword
+import { Badge } from "@/components/ui/badge"
+
+const Navbar = ({ user }: { user: UserProfile | null }) => {
 
 
   const navItems = [
@@ -23,8 +25,8 @@ const Navbar = ({ user }: { user: UserProfile | null }) => { // Removed async ke
     <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b border-border z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2"> {/* New flex container to group button and logo */}
-            <CourseBackButton /> {/* New button component */}
+          <div className="flex items-center gap-2">
+            <CourseBackButton />
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
               <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -68,8 +70,36 @@ const Navbar = ({ user }: { user: UserProfile | null }) => { // Removed async ke
                     Dashboard
                   </Button>
                 </Link>
-                <UserButton fallback={<Skeleton className="rounded-full h-10 w-10"/>}/>
-                {/* todo: have to check the skeleton */}
+                <Link href="/pricing">
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                  >
+                    Manage Subscription
+                  </Button>
+                </Link>
+                <Link href={`/profile/${user.userId}`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-8 w-8 p-0 overflow-hidden ring-2 ring-border hover:ring-primary transition-all hover:scale-105"
+                  >
+                    {user.imageUrl ? (
+                      <Image
+                        src={user.imageUrl}
+                        alt={user.username}
+                        width={32}
+                        height={32}
+                        className="object-cover rounded-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </Button>
+                </Link>
+                <Badge variant="outline" className="ml-2">Credits: {user.credits}</Badge>
               </>
             )}
           </div>

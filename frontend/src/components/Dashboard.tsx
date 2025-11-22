@@ -61,7 +61,7 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <Card className="border-border/50">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
@@ -96,6 +96,26 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
                 </div>
                 <div className="text-2xl font-bold mb-1">{userProgress.currentStreak}</div>
                 <div className="text-sm text-muted-foreground">Day Streak</div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle>Subscription & Credits</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-muted-foreground">Plan</span>
+                  <span className="font-semibold">{userProfile?.subscription_plan || 'Free'}</span>
+                </div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-muted-foreground">Credits</span>
+                  <span className="font-semibold">{userProfile?.credits || 0}</span>
+                </div>
+                <Link href="/pricing">
+                  <Button variant="outline" className="w-full rounded-xl">
+                    Purchase Credits
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

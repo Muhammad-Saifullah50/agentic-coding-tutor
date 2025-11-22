@@ -6,6 +6,14 @@ const nextConfig = {
     },
    turbopack: {
     ignoreBuildErrors:true
+   },
+   images:{
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+    ],
    }
 }
 

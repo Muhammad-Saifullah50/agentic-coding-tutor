@@ -2,4 +2,5 @@
 docker-compose.yaml
 mlruns
 agentops.log
-.pyc
+*.pyc
+__pycache__

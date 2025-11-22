@@ -263,7 +263,7 @@ async def test_api_code_review_token_limit():
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "failure"
-        assert "500" in data["error_message"]
+        assert "Code exceeds 500 line limit" in data["error_message"]
 
 
 if __name__ == "__main__":

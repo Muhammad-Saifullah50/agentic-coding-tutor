@@ -1,96 +1,83 @@
 'use client';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Code2, ArrowLeft, Edit2, User, Target, Clock, Brain, Trophy, Award, Sparkles, Crown } from 'lucide-react';
 import { toast } from 'sonner';
-
 import { UserProfile } from '@/types/user';
+import Image from 'next/image';
 
 interface ProfileProps {
   userProfile: UserProfile | null;
+  progressData: {
+    totalCourses: number;
+    completedLessons: number;
+    totalLessons: number;
+    completionPercentage: number;
+  };
 }
 
-const Profile = ({ userProfile }: ProfileProps) => {
-  const navigate = useNavigate();
+const Profile = ({ userProfile, progressData }: ProfileProps) => {
+  const router = useRouter();
   const [currentPlan] = useState('free'); // 'free', 'pro', 'premium'
-
-  // Mock progress data
-  const progressData = {
-    hoursStudied: 24,
-    lessonsCompleted: 18,
-    topicsMastered: 5,
-    totalLessons: 45,
-    completionPercentage: 40,
-    streak: userProfile?.streak || 0,
-    xp: userProfile?.xp || 0,
-  };
 
   const handleEditProfile = () => {
     toast.info('Edit profile feature coming soon!');
   };
 
   const handleEditPreferences = () => {
-    navigate('/onboarding');
+    router.push('/onboarding');
   };
 
-  // if (!userProfile) {
-  //   return (
-  //     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-  //       <Card className="max-w-md w-full">
-  //         <CardHeader>
-  //           <CardTitle>No Profile Found</CardTitle>
-  //           <CardDescription>Please complete onboarding first</CardDescription>
-  //         </CardHeader>
-  //         <CardContent>
-  //           <Button onClick={() => navigate('/onboarding')} className="w-full btn-hero">
-  //             Start Onboarding
-  //           </Button>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   );
-  // }
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle>No Profile Found</CardTitle>
+            <CardDescription>Please complete onboarding first</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/onboarding')} className="w-full btn-hero">
+              Start Onboarding
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/" className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Code2 className="w-6 h-6 text-primary" />
-                </div>
-                <span className="text-xl font-bold hidden sm:inline">AI Coding Tutor</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Profile Header */}
         <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 fill-mode-both text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <User className="w-12 h-12 text-white" />
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                {userProfile.imageUrl ? (
+                  <Image
+                    src={userProfile.imageUrl}
+                    alt={userProfile.username}
+                    width={96}
+                    height={96}
+                    className="object-cover"
+                  />
+                ) : (
+                  <User className="w-12 h-12 text-white" />
+                )}
               </div>
               <div className="absolute -bottom-2 -right-2 p-2 rounded-full bg-accent shadow-lg">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
             </div>
           </div>
-          <h1 className="text-3xl font-bold mb-1">Saifullah</h1>
+          <h1 className="text-3xl font-bold mb-1">{userProfile.username}</h1>
           <p className="text-muted-foreground text-lg">Curious Learner 🚀</p>
         </div>
 
@@ -122,15 +109,19 @@ const Profile = ({ userProfile }: ProfileProps) => {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5">
                 <span className="text-sm text-muted-foreground">Name</span>
-                <span className="font-medium">Saifullah</span>
+                <span className="font-medium">{userProfile.username}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5">
                 <span className="text-sm text-muted-foreground">Email</span>
-                <span className="font-medium">user@example.com</span>
+                <span className="font-medium">{userProfile.email}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5">
                 <span className="text-sm text-muted-foreground">Age Group</span>
-                {/* <span className="font-medium">{userProfile.ageRange}</span> */}
+                <span className="font-medium">{userProfile.ageRange}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5">
+                <span className="text-sm text-muted-foreground">Education Level</span>
+                <span className="font-medium">{userProfile.educationLevel}</span>
               </div>
             </CardContent>
           </Card>
@@ -165,28 +156,28 @@ const Profile = ({ userProfile }: ProfileProps) => {
                   <Code2 className="w-4 h-4 text-primary" />
                   <span className="text-xs text-muted-foreground">Background</span>
                 </div>
-                {/* <p className="font-medium">{userProfile.techBackground}</p> */}
+                <p className="font-medium">{userProfile.techBackground}</p>
               </div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="w-4 h-4 text-secondary" />
                   <span className="text-xs text-muted-foreground">Goals</span>
                 </div>
-                {/* <p className="font-medium text-sm">{userProfile.goals[0]}</p> */}
+                <p className="font-medium text-sm">{userProfile.goals[0]}</p>
               </div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-4 h-4 text-accent" />
                   <span className="text-xs text-muted-foreground">Time Commitment</span>
                 </div>
-                {/* <p className="font-medium">{userProfile.timePerWeek}</p> */}
+                <p className="font-medium">{userProfile.timePerWeek}</p>
               </div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/5 border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Brain className="w-4 h-4 text-primary" />
                   <span className="text-xs text-muted-foreground">Learning Style</span>
                 </div>
-                {/* <p className="font-medium">{userProfile.learningMode}</p> */}
+                <p className="font-medium">{userProfile.learningMode}</p>
               </div>
             </CardContent>
           </Card>
@@ -206,19 +197,18 @@ const Profile = ({ userProfile }: ProfileProps) => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Stats Grid */}
-              {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-lg bg-primary/5">
-                  <div className="text-2xl font-bold text-primary mb-1">{progressData.xp}</div>
+                  <div className="text-2xl font-bold text-primary mb-1">{userProfile?.xp || 0}</div>
                   <div className="text-xs text-muted-foreground">Total XP</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-secondary/5">
-                  <div className="text-2xl font-bold text-secondary mb-1">{progressData.streak}</div>
+                  <div className="text-2xl font-bold text-secondary mb-1">{userProfile?.streak || 0}</div>
                   <div className="text-xs text-muted-foreground">Day Streak</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-accent/5">
-                  <div className="text-2xl font-bold text-accent mb-1">{progressData.topicsMastered}</div>
-                  <div className="text-xs text-muted-foreground">Topics Mastered</div>
+                  <div className="text-2xl font-bold text-accent mb-1">{progressData.totalCourses}</div>
+                  <div className="text-xs text-muted-foreground">Courses Enrolled</div>
                 </div>
               </div>
 
@@ -227,13 +217,17 @@ const Profile = ({ userProfile }: ProfileProps) => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Course Completion</span>
                   <span className="text-sm text-muted-foreground">
-                    {progressData.lessonsCompleted}/{progressData.totalLessons} lessons
+                    {progressData.completedLessons}/{progressData.totalLessons} lessons
                   </span>
                 </div>
                 <Progress value={progressData.completionPercentage} className="h-3" />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span>You're doing great! Keep it up!</span>
+                  <span>
+                    {progressData.completionPercentage > 0
+                      ? "You're doing great! Keep it up!"
+                      : "Start your learning journey today!"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -279,7 +273,7 @@ const Profile = ({ userProfile }: ProfileProps) => {
               </div>
 
               {currentPlan === 'free' && (
-                <Link to="/pricing">
+                <Link href="/pricing">
                   <Button className="w-full btn-hero rounded-xl gap-2">
                     <Award className="w-5 h-5" />
                     Upgrade Plan

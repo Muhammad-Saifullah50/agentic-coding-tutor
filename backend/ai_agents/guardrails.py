@@ -12,6 +12,20 @@ from schemas.curriculum_outline import CurriculumOutline
 from schemas.full_course import FullCourse
 from schemas.code_review_schemas import CodeInputValidation
 
+# --- Mentor Guardrail Models ---
+
+class MentorInputSafetyCheck(BaseModel):
+    is_safe: bool = Field(description="True if the input is safe and does not contain harmful content.")
+    is_appropriate: bool = Field(description="True if the request is appropriate for academic assistance (not cheating, plagiarism, etc.).")
+    is_relevant: bool = Field(description="True if the input is related to learning, studying, or career development.")
+    reason: str = Field(description="Brief user-friendly explanation (max 15 words) for the safety assessment.")
+
+class MentorOutputSafetyCheck(BaseModel):
+    is_safe: bool = Field(description="True if the response is safe, educational, and supportive.")
+    is_appropriate: bool = Field(description="True if the response is age-appropriate and contains no harmful advice.")
+    no_false_guarantees: bool = Field(description="True if the response avoids false promises about career success or exam results.")
+    reasoning: str = Field(description="Explanation for the safety assessment.")
+
 # --- Input Guardrail Models ---
 
 class InputSafetyCheck(BaseModel):
@@ -114,6 +128,69 @@ code_input_guardrail_agent = Agent(
     model=gemini_lite_model,
 )
 
+mentor_input_guardrail_agent = Agent(
+    name="Mentor Input Safety Guardrail",
+    instructions="""You are a safety checker for an AI Mentor system that helps students with learning.
+    Analyze the user's message to the AI Mentor.
+    
+    1. Safety Check:
+    - Reject violence, self-harm, hate speech, harassment, discrimination.
+    - Reject political propaganda or extremist content.
+    - Reject sexual or NSFW content.
+    
+    2. Appropriateness Check:
+    - Reject requests for exam answers, cheating assistance, or plagiarism.
+    - Reject requests to do homework/assignments for the student.
+    - Allow requests for concept explanation, study help, career guidance.
+    
+    3. Relevance Check:
+    - Ensure the topic is related to learning, studying, career development, or education.
+    - Reject completely off-topic requests (e.g., cooking recipes, sports scores).
+    
+    The reason should be user-friendly and can be displayed directly to the user.
+    Keep it concise (max 15 words).
+    
+    Examples:
+    - "Request involves cheating. I'm here to help you learn, not provide answers."
+    - "Input contains inappropriate content. Please ask education-related questions."
+    - "Topic not related to learning. Ask about studying, courses, or career guidance."
+    
+    Return JSON with is_safe, is_appropriate, is_relevant, and reason.
+    """,
+    output_type=MentorInputSafetyCheck,
+    model=gemini_lite_model,
+)
+
+mentor_output_guardrail_agent = Agent(
+    name="Mentor Output Safety Guardrail",
+    instructions="""You are a quality assurance specialist for AI Mentor responses.
+    Analyze the mentor's response to ensure it's safe and educational.
+    
+    1. Safety Check:
+    - Ensure NO harmful advice (e.g., dangerous study methods, unhealthy habits).
+    - Ensure NO NSFW content, political bias, or extremism.
+    - Ensure supportive, non-judgmental tone.
+    
+    2. Appropriateness Check:
+    - Ensure age-appropriate content.
+    - Ensure educational and helpful advice.
+    - Ensure NO personal attacks or harsh criticism.
+    
+    3. False Guarantees Check:
+    - Ensure NO promises about exam success (e.g., "You'll definitely ace the test").
+    - Ensure NO career guarantees (e.g., "You'll get a job at Google").
+    - Allow realistic encouragement and guidance.
+    
+    4. Hallucination Check:
+    - Ensure NO fabricated personal data about the user.
+    - Ensure NO made-up course content or deadlines.
+    
+    Return JSON with is_safe, is_appropriate, no_false_guarantees, and reasoning.
+    """,
+    output_type=MentorOutputSafetyCheck,
+    model=gemini_lite_model,
+)
+
 # --- Guardrail Functions ---
 
 @input_guardrail
@@ -185,6 +262,16 @@ async def validate_code_input(
     Checks for valid code vs conversational text, length limits, and malicious content.
     """
     text_input = str(input_data)
+
+    # Manual line count check
+    if text_input.count('\n') > 500:
+        return GuardrailFunctionOutput(
+            output_info=CodeInputValidation(
+                is_valid_code_input=False,
+                reason="Code exceeds 500 line limit. Please submit shorter snippets."
+            ),
+            tripwire_triggered=True,
+        )
     
     result = await Runner.run(code_input_guardrail_agent, text_input)
     validation: CodeInputValidation = result.final_output
@@ -194,5 +281,56 @@ async def validate_code_input(
     
     return GuardrailFunctionOutput(
         output_info=validation,
+        tripwire_triggered=tripwire,
+    )
+
+@input_guardrail
+async def validate_mentor_input(
+    ctx: RunContextWrapper, agent: Agent, input_data: str
+) -> GuardrailFunctionOutput:
+    """
+    Guardrail to validate user input before processing by the AI Mentor.
+    Checks for safety, appropriateness, and relevance to learning/education.
+    """
+    text_input = str(input_data)
+    
+    result = await Runner.run(mentor_input_guardrail_agent, text_input)
+    safety_check: MentorInputSafetyCheck = result.final_output
+    
+    # Trip if unsafe OR inappropriate OR irrelevant
+    tripwire = not (
+        safety_check.is_safe 
+        and safety_check.is_appropriate 
+        and safety_check.is_relevant
+    )
+    
+    return GuardrailFunctionOutput(
+        output_info=safety_check,
+        tripwire_triggered=tripwire,
+    )
+
+@output_guardrail
+async def validate_mentor_output(
+    ctx: RunContextWrapper, agent: Agent, output: str
+) -> GuardrailFunctionOutput:
+    """
+    Guardrail to validate the AI Mentor's response.
+    Ensures safety, appropriateness, and no false guarantees.
+    """
+    # Convert output to string if needed
+    output_str = str(output)
+    
+    result = await Runner.run(mentor_output_guardrail_agent, output_str)
+    safety_check: MentorOutputSafetyCheck = result.final_output
+    
+    # Trip if unsafe OR inappropriate OR contains false guarantees
+    tripwire = not (
+        safety_check.is_safe 
+        and safety_check.is_appropriate 
+        and safety_check.no_false_guarantees
+    )
+    
+    return GuardrailFunctionOutput(
+        output_info=safety_check,
         tripwire_triggered=tripwire,
     )
