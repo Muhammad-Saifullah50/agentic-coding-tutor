@@ -1,5 +1,6 @@
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Toaster } from 'sonner'
+import { Toaster as ShadcnToaster } from '@/components/ui/toaster'
 import '../globals.css'
 import {
   ClerkProvider
@@ -14,9 +15,9 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
 
-    const user = await getCurrentUserWithProfile()
-  
-    if (user && !user?.onBoarded) redirect('/onboarding');
+  const user = await getCurrentUserWithProfile()
+
+  if (user && !user?.onBoarded) redirect('/onboarding');
   return (
     <ClerkProvider>
 
@@ -29,9 +30,9 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <main id='root' className=''>
-              <Navbar user={user}/>
+              <Navbar user={user} />
               <div className="min-h-screen bg-background pt-20">
-              {children}
+                {children}
               </div>
               <Toaster
                 toastOptions={{
@@ -46,6 +47,7 @@ export default async function RootLayout({
                   },
                 }}
               />
+              <ShadcnToaster />
             </main>
           </ThemeProvider>
         </body>

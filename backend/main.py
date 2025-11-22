@@ -17,7 +17,10 @@ from activities.course_activities import generate_outline_activity, generate_cou
 import json
 from actions.save_course import save_course
 from schemas.full_course import FullCourse
+from schemas.code_review_schemas import CodeReviewRequest, CodeReviewResponse
 import agentops
+from agents import Runner, InputGuardrailTripwireTriggered
+from ai_agents.code_review_agent import code_review_agent, generate_instructions
 load_dotenv()
 
 
@@ -237,3 +240,79 @@ async def generate_course(workflow_id: str, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+# --- API Endpoint 4: Code Review ---
+@app.post("/code-review")
+async def review_code(request: CodeReviewRequest):
+    """
+    Executes the Code Review pipeline with input validation guardrail and code review agent.
+    """
+    try:
+        # Start AgentOps tracing
+        agentops.start_trace(tags=[f"Code Review {request.session_id}"])
+        
+        # Validate inputs
+        if not request.code or not request.code.strip():
+            return CodeReviewResponse(
+                status="failure",
+                error_message="Code input is empty. Please provide code to review."
+            )
+        
+        if not request.language or not request.language.strip():
+            return CodeReviewResponse(
+                status="failure",
+                error_message="Language is required. Please specify the programming language."
+            )
+        
+        # Prepare input for agent (include language context)
+        code_with_context = f"Language: {request.language}\n\nCode:\n{request.code}"
+        
+        # Generate dynamic instructions
+        instructions = generate_instructions(request.language, request.challenge)
+        
+        # Update agent instructions dynamically
+        code_review_agent.instructions = instructions
+        
+        print(f"🔍 Starting code review for session: {request.session_id}")
+        print(f"📝 Language: {request.language}")
+        print(f"📏 Code length: {len(request.code)} characters, {request.code.count(chr(10)) + 1} lines")
+        
+        # Run the agent (guardrail will be executed automatically)
+        try:
+            result = await Runner.run(code_review_agent, code_with_context)
+            analysis = result.final_output
+            
+            print(f"✅ Code review completed successfully")
+            
+            # Return success response
+            return CodeReviewResponse(
+                status="success",
+                corrected_code=analysis.corrected_code,
+                feedback_explanation=analysis.feedback_explanation
+            )
+            
+        except InputGuardrailTripwireTriggered as e:
+            # Guardrail was triggered
+            print(f"🚫 Guardrail triggered: {e}")
+            
+            # Extract the reason from guardrail output
+            error_msg = "Invalid code input."
+            if hasattr(e, 'guardrail_result') and hasattr(e.guardrail_result, 'output_info'):
+                output_info = e.guardrail_result.output_info
+                if hasattr(output_info, 'reason'):
+                    error_msg = output_info.reason
+            
+            return CodeReviewResponse(
+                status="failure",
+                error_message=error_msg
+            )
+    
+    except Exception as e:
+        print(f"❌ Error in code review: {e}")
+        import traceback
+        print(traceback.format_exc())
+        
+        return CodeReviewResponse(
+            status="failure",
+            error_message="The AI Reviewer encountered an internal error. Please try again."
+        )

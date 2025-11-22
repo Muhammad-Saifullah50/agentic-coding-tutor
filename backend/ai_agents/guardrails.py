@@ -10,6 +10,7 @@ from agents import (
 from models.gemini import  gemini_lite_model
 from schemas.curriculum_outline import CurriculumOutline
 from schemas.full_course import FullCourse
+from schemas.code_review_schemas import CodeInputValidation
 
 # --- Input Guardrail Models ---
 
@@ -74,6 +75,45 @@ output_guardrail_agent = Agent(
     model=gemini_lite_model,
 )
 
+code_input_guardrail_agent = Agent(
+    name="Code Input Validation Guardrail",
+    instructions="""You are a code input validation guardrail for a code review system.
+    Analyze the provided text and determine if it appears to be valid programming code.
+    
+    1. Valid Code Check:
+    - Contains programming syntax, keywords, functions, variables, or control structures.
+    - Belongs to common programming languages (Python, JavaScript, Java, C++, etc.).
+    - May have bugs or issues (that's expected - it's for review).
+    
+    2. Invalid Input (reject these):
+    - Conversational text or questions (e.g., "How do I sort an array?").
+    - Random gibberish or nonsense text.
+    - URLs or links.
+    - Political propaganda or extremist content.
+    - Plain text stories or essays.
+    
+    3. Malicious/Inappropriate Code (reject these):
+    - Code attempting malware generation, hacking, or exploitation.
+    - Code with highly offensive or hateful comments.
+    - Code attempting dangerous system calls without educational context.
+    
+    4. Length Check:
+    - The code must NOT exceed 500 lines. Count the number of newline characters.
+    - If code is longer than 500 lines, set is_valid_code_input to false.
+    - Reason should mention "Code exceeds 500 line limit" if too long.
+    
+    Return a user-friendly reason (max 15 words) that can be displayed directly to the user.
+    Examples:
+    - "Input appears to be conversational text, not code."
+    - "Code exceeds 500 line limit. Please submit shorter snippets."
+    - "Input contains inappropriate or malicious content."
+    
+    Return JSON with is_valid_code_input (boolean) and reason (string).
+    """,
+    output_type=CodeInputValidation,
+    model=gemini_lite_model,
+)
+
 # --- Guardrail Functions ---
 
 @input_guardrail
@@ -133,5 +173,26 @@ async def validate_course_content(
     
     return GuardrailFunctionOutput(
         output_info=quality_check,
+        tripwire_triggered=tripwire,
+    )
+
+@input_guardrail
+async def validate_code_input(
+    ctx: RunContextWrapper, agent: Agent, input_data: str
+) -> GuardrailFunctionOutput:
+    """
+    Guardrail to validate code input before running code review.
+    Checks for valid code vs conversational text, length limits, and malicious content.
+    """
+    text_input = str(input_data)
+    
+    result = await Runner.run(code_input_guardrail_agent, text_input)
+    validation: CodeInputValidation = result.final_output
+    
+    # Trip if input is not valid code
+    tripwire = not validation.is_valid_code_input
+    
+    return GuardrailFunctionOutput(
+        output_info=validation,
         tripwire_triggered=tripwire,
     )
