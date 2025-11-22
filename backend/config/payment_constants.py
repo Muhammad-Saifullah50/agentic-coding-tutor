@@ -4,8 +4,3 @@ PRICE_IDS = {
     "plus": "price_1",   # $50/month
     "pro": "price_2",    # $80/month
 }
-# Credit bundles (if you later add one‑time credit purchases)
-CREDIT_BUNDLES = {
-    "credits_100": {"price_id": "price_3", "credits": 100},
-    "credits_250": {"price_id": "price_4", "credits": 250},
-}

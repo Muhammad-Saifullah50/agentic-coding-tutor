@@ -2,18 +2,23 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Check, Zap, Shield, Star } from "lucide-react";
-import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import { PLANS } from "@/config/paymentConstants";
+
 
 const plans = [
   {
     name: "Free",
+    key: "free",
     price: { usd: "$0", pkr: "₨0" },
     period: "forever",
     description: "Perfect for getting started",
     features: [
-      "3 AI lessons per week",
+      "2 course generations",
+      "20 initial credits",
       "Basic code playground",
       "Community support",
       "Progress tracking",
@@ -26,19 +31,20 @@ const plans = [
     borderColor: "border-blue-200",
   },
   {
-    name: "Starter",
-    price: { usd: "$9", pkr: "₨2,500" },
+    name: "Plus",
+    key: "plus",
+    price: { usd: "$50", pkr: "₨14,000" },
     period: "/month",
     description: "For serious learners",
     features: [
-      "Unlimited AI lessons",
+      "5 course generations",
+      "50 credits per month",
       "Advanced code playground",
-      "AI mentor chat (100 msgs/month)",
+      "AI mentor chat",
       "Code review feedback",
       "Priority support",
-      "Downloadable certificates",
     ],
-    cta: "Start Free Trial",
+    cta: "Upgrade to Plus",
     popular: true,
     icon: Zap,
     color: "text-amber-500",
@@ -47,19 +53,20 @@ const plans = [
   },
   {
     name: "Pro",
-    price: { usd: "$19", pkr: "₨5,000" },
+    key: "pro",
+    price: { usd: "$80", pkr: "₨22,500" },
     period: "/month",
     description: "For aspiring developers",
     features: [
-      "Everything in Starter",
+      "10 course generations",
+      "100 credits per month",
+      "Everything in Plus",
       "Unlimited AI mentor chat",
-      "1-on-1 mentorship sessions",
       "Custom learning paths",
       "Interview preparation",
-      "Job placement assistance",
-      "Lifetime access to all courses",
+      "Premium support",
     ],
-    cta: "Start Free Trial",
+    cta: "Upgrade to Pro",
     popular: false,
     icon: Shield,
     color: "text-green-500",
@@ -71,6 +78,45 @@ const plans = [
 const Pricing = () => {
   const [currency, setCurrency] = useState<'usd' | 'pkr'>('usd');
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
+
+  const handleUpgrade = async (planKey: keyof typeof PLANS) => {
+    const { user } = useUser();
+    const router = useRouter();
+    if (!user) {
+      router.push('/sign-in');
+      return;
+    }
+    const successUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?session=success`;
+    const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription?session=cancel`;
+    const response = await fetch('/api/stripe/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        planKey,
+        userId: user.id,
+        email: user.emailAddresses?.[0]?.emailAddress || '',
+        successUrl,
+        cancelUrl,
+      }),
+    });
+    const data = await response.json();
+    if (data.sessionId) {
+      // Redirect to Stripe Checkout
+      const stripe = await (await import('@stripe/stripe-js')).loadStripe(
+        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
+      );
+      if (stripe) {
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: data.sessionId,
+        });
+        if (error) {
+          console.error('Stripe redirect error:', error);
+        }
+      }
+    } else {
+      console.error('Failed to create checkout session', data);
+    }
+  };
 
   return (
     <section id="pricing" className="py-24 md:py-32 relative overflow-hidden" ref={elementRef}>
@@ -97,8 +143,8 @@ const Pricing = () => {
             <button
               onClick={() => setCurrency('usd')}
               className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${currency === 'usd'
-                  ? 'bg-background text-foreground shadow-md scale-105'
-                  : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-background text-foreground shadow-md scale-105'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               International (USD)
@@ -106,8 +152,8 @@ const Pricing = () => {
             <button
               onClick={() => setCurrency('pkr')}
               className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${currency === 'pkr'
-                  ? 'bg-background text-foreground shadow-md scale-105'
-                  : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-background text-foreground shadow-md scale-105'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               Pakistan (PKR) 🇵🇰
@@ -121,8 +167,8 @@ const Pricing = () => {
             <Card
               key={index}
               className={`relative flex flex-col transition-all duration-500 group hover:shadow-2xl hover:-translate-y-2 overflow-hidden ${plan.popular
-                  ? "border-primary shadow-xl md:scale-105 z-10 bg-card"
-                  : "border-border/50 bg-card/50 hover:bg-card"
+                ? "border-primary shadow-xl md:scale-105 z-10 bg-card"
+                : "border-border/50 bg-card/50 hover:bg-card"
                 } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}
               style={{
                 transitionDelay: `${index * 100}ms`,
@@ -169,17 +215,18 @@ const Pricing = () => {
               </CardContent>
 
               <CardFooter className="pt-8 pb-10 relative z-10">
-                <Link href="/signup" className="w-full">
-                  <Button
-                    className={`w-full h-12 rounded-xl text-base font-medium transition-all duration-300 ${plan.popular
-                        ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
-                        : "bg-muted hover:bg-muted/80 text-foreground hover:scale-[1.02]"
-                      }`}
-                    variant={plan.popular ? "default" : "secondary"}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
+                <Button
+                  className={`w-full h-12 rounded-xl text-base font-medium transition-all duration-300 ${plan.popular
+                    ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
+                    : "bg-muted hover:bg-muted/80 text-foreground hover:scale-[1.02]"
+                    }`}
+                  variant={plan.popular ? "default" : "secondary"}
+                  onClick={() => {
+                    handleUpgrade(plan.key);
+                  }}
+                >
+                  {plan.cta}
+                </Button>
               </CardFooter>
             </Card>
           ))}

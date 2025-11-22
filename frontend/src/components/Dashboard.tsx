@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles } from "lucide-react";
+import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles, Coins } from "lucide-react";
 import aiMentor from "./../../public/ai-mentor.jpg";
 
 import { FullCourseData } from "@/types/course";
@@ -99,23 +99,12 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
               </CardContent>
             </Card>
             <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle>Subscription & Credits</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-muted-foreground">Plan</span>
-                  <span className="font-semibold">{userProfile?.subscription_plan || 'Free'}</span>
+                  <Coins className="w-8 h-8 text-amber-500" />
                 </div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-muted-foreground">Credits</span>
-                  <span className="font-semibold">{userProfile?.credits || 0}</span>
-                </div>
-                <Link href="/pricing">
-                  <Button variant="outline" className="w-full rounded-xl">
-                    Purchase Credits
-                  </Button>
-                </Link>
+                <div className="text-2xl font-bold mb-1">{userProfile?.credits || 0}</div>
+                <div className="text-sm text-muted-foreground">Credits</div>
               </CardContent>
             </Card>
           </div>

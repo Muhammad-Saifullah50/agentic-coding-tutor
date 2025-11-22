@@ -4,11 +4,8 @@ import MobileNav from "@/components/MobileNav"
 import { ThemeToggleButton } from "./ThemeToggleButton"
 import { UserProfile } from "@/types/user"
 import { Button } from "./ui/button"
-import { Skeleton } from "./ui/skeleton"
 import { CourseBackButton } from "./CourseBackButton"
 import Image from "next/image"
-
-import { Badge } from "@/components/ui/badge"
 
 const Navbar = ({ user }: { user: UserProfile | null }) => {
 
@@ -70,14 +67,6 @@ const Navbar = ({ user }: { user: UserProfile | null }) => {
                     Dashboard
                   </Button>
                 </Link>
-                <Link href="/pricing">
-                  <Button
-                    variant="outline"
-                    className="rounded-xl"
-                  >
-                    Manage Subscription
-                  </Button>
-                </Link>
                 <Link href={`/profile/${user.userId}`}>
                   <Button
                     variant="ghost"
@@ -99,7 +88,6 @@ const Navbar = ({ user }: { user: UserProfile | null }) => {
                     )}
                   </Button>
                 </Link>
-                <Badge variant="outline" className="ml-2">Credits: {user.credits}</Badge>
               </>
             )}
           </div>
