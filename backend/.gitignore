@@ -1,7 +1,8 @@
 .vercel
 .venv
 .env
-__pycache__
+.vercel
+.venv
 # Environment files
 .env
 
@@ -11,5 +12,5 @@ __pycache__/
 
 mlruns
 mlartifacts
-.pytest_cache.pytest_cache/
+.pytest_cache/
 .pytest.ini

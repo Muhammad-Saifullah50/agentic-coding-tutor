@@ -5,7 +5,7 @@ from temporalio import activity
 from agents import Runner, InputGuardrailTripwireTriggered, OutputGuardrailTripwireTriggered
 from ai_agents.curriculum_outline_agent import curriculum_outline_agent
 from ai_agents.course_generation_agent import course_generation_agent
-import mlflow
+
 
 
 async def periodic_heartbeat(interval: int = 10):
@@ -57,7 +57,6 @@ def pydantic_to_json(obj: Any) -> str:
     activity.logger.warning(f"⚠️ Could not serialize {type(obj)}, wrapping as string")
     return json.dumps({"content": str(obj)}, indent=2)
 
-@mlflow.trace
 @activity.defn
 async def generate_outline_activity(language: str, focus: str, user_profile: Dict[str, Any], additionalNotes:str) -> str:
     """Generate curriculum outline using AI agent."""
@@ -130,7 +129,6 @@ async def generate_outline_activity(language: str, focus: str, user_profile: Dic
         except asyncio.CancelledError:
             pass
 
-@mlflow.trace
 @activity.defn
 async def generate_course_activity(outline_json: str, user_profile: Dict[str, Any], additionalNotes:str) -> str:
     """Generate full course content using AI agent."""
