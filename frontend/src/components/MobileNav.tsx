@@ -68,7 +68,6 @@ const MobileNav = ({ navItems, user }) => {
                     <Link href="/dashboard" onClick={() => setOpen(false)}>
                             <Button
                               className="w-full rounded-xl"
-                              disabled={!user.confirmed_at}
                             >
                               Dashboard
                             </Button>

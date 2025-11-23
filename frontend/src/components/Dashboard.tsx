@@ -110,9 +110,37 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div>
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Jump into your learning activities</CardDescription>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-4">
+                <Link href="/courses" className="block">
+                  <Button
+                    variant="outline"
+                    className="w-full h-24 flex-col gap-2 hover:border-primary hover:bg-primary/5 rounded-xl"
+                  >
+                    <BookOpen className="w-6 h-6 text-primary" />
+                    <span className="font-medium">Browse Courses</span>
+                  </Button>
+                </Link>
+                <Link href="/playground" className="block">
+                  <Button
+                    variant="outline"
+                    className="w-full h-24 flex-col gap-2 hover:border-accent hover:bg-accent/5 rounded-xl"
+                  >
+                    <Code2 className="w-6 h-6 text-accent" />
+                    <span className="font-medium">Code Playground</span>
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
             {courses && courses.length > 0 ? (
               <Card className="border-border/50">
                 <CardHeader>
@@ -168,83 +196,8 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
                 </Link>
               </Card>
             )}
-
-            {/* Quick Actions */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Jump into your learning activities</CardDescription>
-              </CardHeader>
-              <CardContent className="grid sm:grid-cols-3 gap-4">
-                <Link href="/courses" className="block">
-                  <Button
-                    variant="outline"
-                    className="w-full h-24 flex-col gap-2 hover:border-primary hover:bg-primary/5 rounded-xl"
-                  >
-                    <BookOpen className="w-6 h-6 text-primary" />
-                    <span className="font-medium">Browse Courses</span>
-                  </Button>
-                </Link>
-                <Link href="/playground" className="block">
-                  < Button
-                    variant="outline"
-                    className="w-full h-24 flex-col gap-2 hover:border-accent hover:bg-accent/5 rounded-xl"
-                  >
-                    <Code2 className="w-6 h-6 text-accent" />
-                    <span className="font-medium">Code Playground</span>
-                  </Button>
-                </Link>
-                <Link href="/quiz" className="block">
-                  <Button
-                    variant="outline"
-                    className="w-full h-24 flex-col gap-2 hover:border-secondary hover:bg-secondary/5 rounded-xl"
-                  >
-                    <Trophy className="w-6 h-6 text-secondary" />
-                    <span className="font-medium">Take Quiz</span>
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* AI Mentor */}
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-              <CardContent className="p-6 text-center">
-                <img
-                  src={aiMentor}
-                  alt="AI Mentor"
-                  className="w-32 h-32 mx-auto mb-4 rounded-2xl"
-                />
-                <h3 className="text-xl font-bold mb-2">Your AI Mentor</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Need help? Ask me anything about coding!
-                </p>
-                <Button className="btn-hero w-full rounded-xl">
-                  Chat with Mentor
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Daily Challenge */}
-            <Card className="border-secondary/20 bg-gradient-to-br from-secondary/5 to-primary/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-secondary" />
-                  Daily Challenge
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Complete today's challenge to earn bonus XP and maintain your streak!
-                </p>
-                <Button variant="outline" className="w-full rounded-xl">
-                  Start Challenge
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </div>

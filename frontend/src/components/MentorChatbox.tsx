@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
-import { X, Send, Sparkles, Loader2 } from 'lucide-react';
+import { X, Send, BotMessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ReactMarkdown from 'react-markdown';
@@ -147,7 +147,7 @@ export default function MentorChatbox() {
                         <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 
                           shadow-lg hover:shadow-xl transition-all duration-300 
                           flex items-center justify-center group-hover:scale-110">
-                            <Sparkles className="w-6 h-6 text-primary-foreground" />
+                            <BotMessageSquare className="w-6 h-6 text-primary-foreground" />
                         </div>
                     </div>
                 </button>
@@ -162,7 +162,7 @@ export default function MentorChatbox() {
                     {/* Header */}
                     <div className="bg-gradient-to-r from-primary to-primary/80 p-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-primary-foreground" />
+                            <BotMessageSquare className="w-5 h-5 text-primary-foreground" />
                             <h3 className="font-semibold text-primary-foreground">AI Mentor</h3>
                         </div>
                         <Button

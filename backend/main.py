@@ -1,57 +1,60 @@
-import asyncio
+import os
+import ssl
+import json
 import uuid
-from dotenv import load_dotenv
+import asyncio
+import tempfile
+from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+# Load .env immediately
 load_dotenv()
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import os
-from dotenv import load_dotenv
+from fastapi.responses import StreamingResponse
 
 from temporalio.client import Client
 from temporalio.worker import Worker
 from temporalio.common import WorkflowIDReusePolicy
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
-from openai import AsyncOpenAI
 
+from openai import AsyncOpenAI
+from openai.types.responses import ResponseTextDeltaEvent
+
+# Workflows / Activities
 from workflows.course_workflow import CourseAgent
 from activities.course_activities import generate_outline_activity, generate_course_activity
-import json
+
+# Business logic
 from actions.save_course import save_course
 from schemas.full_course import FullCourse
 from schemas.code_review_schemas import CodeReviewRequest, CodeReviewResponse
-# import agentops
+
 from agents import Runner, InputGuardrailTripwireTriggered
 from ai_agents.code_review_agent import code_review_agent, generate_instructions
+
 from schemas.mentor_schemas import MentorChatRequest, MentorChatResponse
 from ai_agents.mentor_agent import mentor_agent
 from utils.mentor_utils import get_mentor_session, build_context_message
+
+# External services
 from utils.supabase_client import supabase
 import stripe
 from utils.stripe_utils import create_checkout_session, handle_webhook
 
-
-# AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
-
-# agentops.init()
-
 # Global variables
 temporal_client = None
 worker_task = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events for FastAPI."""
     global temporal_client, worker_task
     
-    # Startup: Connect to Temporal and start worker
     print("🚀 Starting up FastAPI application...")
-    
 
-    # Create Gemini client for the worker
+    # 1. Setup Gemini Client
     base_url = os.getenv('GEMINI_BASE_URL')
     api_key = os.getenv('GEMINI_API_KEY')
     
@@ -63,21 +66,72 @@ async def lifespan(app: FastAPI):
         base_url=base_url,
     )
     print("✅ Gemini client configured")
-    
-    # Connect to Temporal
-    temporal_client = await Client.connect(
-        "localhost:7233",
-        plugins=[
-            OpenAIAgentsPlugin(
-                model_provider=gemini_client,
-                
-            )
-        ],
-    )
-    print("✅ Connected to Temporal server")
-    
 
-    # Create and start worker in background
+    # 2. Determine Environment
+    app_env = os.getenv("APP_ENV", "development").lower()
+    
+    # 3. Configure Temporal Connection
+    if app_env == "production":
+        # --- CLOUD CONFIGURATION (Vercel/GitHub) ---
+        print("☁️ Connecting to Temporal Cloud...")
+        
+        temporal_addr = os.getenv("TEMPORAL_ADDRESS")
+        temporal_ns = os.getenv("TEMPORAL_NAMESPACE")
+        
+        # Get certificate CONTENT from environment variables
+        client_cert_content = os.getenv("TEMPORAL_CLIENT_CERT")
+        client_key_content = os.getenv("TEMPORAL_CLIENT_KEY")
+
+        if not all([temporal_addr, temporal_ns, client_cert_content, client_key_content]):
+            raise ValueError("Missing Temporal Cloud config. Need ADDRESS, NAMESPACE, CLIENT_CERT, and CLIENT_KEY env vars.")
+
+        # Create secure temporary files for the certs
+        cert_path = None
+        key_path = None
+        
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
+                cert_file.write(client_cert_content)
+                cert_path = cert_file.name
+
+            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.key') as key_file:
+                key_file.write(client_key_content)
+                key_path = key_file.name
+
+            # Create SSL Context using the temp files
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
+            
+            # Connect to Cloud
+            temporal_client = await Client.connect(
+                temporal_addr,
+                namespace=temporal_ns,
+                tls=ssl_context,
+                plugins=[
+                    OpenAIAgentsPlugin(model_provider=gemini_client)
+                ],
+            )
+        finally:
+            # CLEANUP: Delete the temp files immediately after loading them
+            if cert_path and os.path.exists(cert_path):
+                os.unlink(cert_path)
+            if key_path and os.path.exists(key_path):
+                os.unlink(key_path)
+
+    else:
+        # --- LOCAL CONFIGURATION ---
+        print("💻 Connecting to Local Temporal...")
+        temporal_client = await Client.connect(
+            "localhost:7233",
+            namespace="default", 
+            plugins=[
+                OpenAIAgentsPlugin(model_provider=gemini_client)
+            ],
+        )
+
+    print(f"✅ Connected to Temporal server ({app_env})")
+
+    # 4. Start Worker
     worker = Worker(
         temporal_client,
         task_queue="my-task-queue",
@@ -85,28 +139,20 @@ async def lifespan(app: FastAPI):
         activities=[generate_outline_activity, generate_course_activity],
     )
     
-    print("🔧 Starting Temporal worker...")
-    print("📋 Task queue: 'my-task-queue'")
-    print("🤖 Using Gemini model")
-    print("📦 Workflows:", [CourseAgent.__name__])
-    print("⚡ Activities:", [generate_outline_activity.__name__, generate_course_activity.__name__])
-    
-    # Start worker in background task
+    # Start the worker in the background (non-blocking)
     worker_task = asyncio.create_task(worker.run())
-    print("✅ Temporal worker started in background")
-    
-    yield  # FastAPI runs here
-    
-    # Shutdown: Stop worker and close connections
-    print("\n🛑 Shutting down...")
+    print("✅ Worker started")
+
+    yield  # Application is now running
+
+    # 5. Cleanup on Shutdown
+    print("🛑 Shutting down...")
     if worker_task:
         worker_task.cancel()
         try:
             await worker_task
         except asyncio.CancelledError:
-            print("✅ Worker stopped")
-    
-    print("👋 Shutdown complete")
+            pass
 
 
 app = FastAPI(lifespan=lifespan)
@@ -149,8 +195,6 @@ async def create_curriculum(request: Request):
 
         workflow_id = f"course-gen-{uuid.uuid4()}"
         print(f"🚀 Starting workflow: {workflow_id}")
-
-        # agentops.start_trace(tags=[f"Course Generation {workflow_id}"])
 
         await temporal_client.start_workflow(
             CourseAgent.create_course,
@@ -197,7 +241,6 @@ async def get_workflow_status(workflow_id: str):
 
 
 # --- API Endpoint 3: Approve & Get Final Course ---
-
 @app.post("/generate-course/{workflow_id}")
 async def generate_course(workflow_id: str, request: Request):
     """
@@ -239,8 +282,12 @@ async def generate_course(workflow_id: str, request: Request):
         print(f"✅ Course saved with ID: {saved_course['course_id']}")
         
         # Update Gamification (XP & Streak)
-        from utils.gamification import update_user_gamification
-        await update_user_gamification(user_id, xp_reward=50) # 50 XP for completing a course
+        # Note: Ensure this import works in your project structure
+        try:
+            from utils.gamification import update_user_gamification
+            await update_user_gamification(user_id, xp_reward=50) # 50 XP for completing a course
+        except ImportError:
+            print("⚠️ Gamification module not found, skipping XP update.")
         
         return {
             "course_id": saved_course['course_id'],
@@ -254,7 +301,6 @@ async def generate_course(workflow_id: str, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 # --- API Endpoint 4: Code Review ---
 @app.post("/code-review")
 async def review_code(request: CodeReviewRequest):
@@ -262,9 +308,6 @@ async def review_code(request: CodeReviewRequest):
     Executes the Code Review pipeline with input validation guardrail and code review agent.
     """
     try:
-        # Start AgentOps tracing
-        # agentops.start_trace(tags=[f"Code Review {request.session_id}"])
-        
         # Validate inputs
         if not request.code or not request.code.strip():
             return CodeReviewResponse(
@@ -289,7 +332,6 @@ async def review_code(request: CodeReviewRequest):
         
         print(f"🔍 Starting code review for session: {request.session_id}")
         print(f"📝 Language: {request.language}")
-        print(f"📏 Code length: {len(request.code)} characters, {request.code.count(chr(10)) + 1} lines")
         
         # Run the agent (guardrail will be executed automatically)
         try:
@@ -332,15 +374,11 @@ async def review_code(request: CodeReviewRequest):
         )
 
 
-from fastapi.responses import StreamingResponse
-from openai.types.responses import ResponseTextDeltaEvent
-
 # --- API Endpoint 5: Mentor Chat (Streaming) ---
 @app.post("/mentor/chat")
 async def mentor_chat(request: MentorChatRequest):
     """
     AI Mentor chat endpoint with streaming support.
-    Maintains conversation history and provides personalized academic assistance.
     """
     # Validate inputs
     if not request.user_id or not request.user_id.strip():
@@ -351,8 +389,8 @@ async def mentor_chat(request: MentorChatRequest):
     
     print(f"💬 Mentor chat request from user: {request.user_id}")
     
-    # Retrieve user profile and courses (simplified for brevity, assume helper functions work)
     try:
+        # Retrieve user profile and courses
         # TEST BYPASS: Allow testing with specific ID
         if request.user_id == "user_2pM3p4q5r6s7t8u9v0w1x2y3z4":
             print("🧪 Using TEST PROFILE for verification")
@@ -413,7 +451,6 @@ async def mentor_chat(request: MentorChatRequest):
                     if event.data.delta:
                         yield f"data: {json.dumps({'content': event.data.delta})}\n\n"
                 elif event.type == "run_item_stream_event":
-                    # Handle guardrail tripwires if exposed via events, or other item updates
                     pass
             
             yield "data: [DONE]\n\n"
