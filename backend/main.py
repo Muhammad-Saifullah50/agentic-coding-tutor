@@ -81,18 +81,53 @@ async def lifespan(app: FastAPI):
         client_cert_content = os.getenv("TEMPORAL_CLIENT_CERT")
         client_key_content = os.getenv("TEMPORAL_CLIENT_KEY")
 
-        # Debug print to check if keys exist (printing length only for security)
-        print(f"DEBUG: Namespace: {temporal_ns}")
-        print(f"DEBUG: Cert Length: {len(client_cert_content) if client_cert_content else 0}")
-        print(f"DEBUG: Key Length: {len(client_key_content) if client_key_content else 0}")
-
         if not all([temporal_ns, client_cert_content, client_key_content]):
             print("❌ MISSING VARIABLES: You have the Address, but are missing the Namespace, Cert, or Key.")
             raise ValueError("Cloud Config Incomplete: Ensure NAMESPACE, CLIENT_CERT, and CLIENT_KEY are set.")
 
+        # ---------------------------------------------------------
+        # 🔧 THE FIX: REPAIR VERCEL NEWLINES
+        # Vercel often turns the cert into one long line. We must 
+        # replace literal "\n" characters with actual line breaks.
+        # ---------------------------------------------------------
+        client_cert_content = client_cert_content.replace("\\n", "\n")
+        client_key_content = client_key_content.replace("\\n", "\n")
+
         # Create secure temporary files
         cert_path = None
         key_path = None
+        
+        try:
+            # We write the REPAIRED content (with newlines) to the file
+            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
+                cert_file.write(client_cert_content)
+                cert_path = cert_file.name
+
+            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.key') as key_file:
+                key_file.write(client_key_content)
+                key_path = key_file.name
+
+            # Create SSL Context
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
+            
+            # Connect
+            temporal_client = await Client.connect(
+                temporal_addr,
+                namespace=temporal_ns,
+                tls=ssl_context,
+                plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
+            )
+        except Exception as e:
+            print(f"❌ CONNECTION FAILED: {str(e)}")
+            # Print the first 50 chars to debug if headers are correct
+            print(f"DEBUG CERT HEAD: {client_cert_content[:50]}")
+            raise e
+        finally:
+            if cert_path and os.path.exists(cert_path):
+                os.unlink(cert_path)
+            if key_path and os.path.exists(key_path):
+                os.unlink(key_path)
         
         try:
             with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
