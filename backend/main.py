@@ -7,12 +7,10 @@ import tempfile
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-# Load .env immediately
 load_dotenv()
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -20,7 +18,6 @@ from temporalio.common import WorkflowIDReusePolicy
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
 from openai import AsyncOpenAI
-from openai.types.responses import ResponseTextDeltaEvent
 
 # Workflows / Activities
 from workflows.course_workflow import CourseAgent
@@ -43,9 +40,11 @@ from utils.supabase_client import supabase
 import stripe
 from utils.stripe_utils import create_checkout_session, handle_webhook
 
-# Global variables
-temporal_client = None
-worker_task = None
+
+# AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
+
+# agentops.init()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,6 +58,7 @@ async def lifespan(app: FastAPI):
     api_key = os.getenv('GEMINI_API_KEY')
     
     if not base_url or not api_key:
+        print("❌ Critical Error: Gemini Environment Variables missing.")
         raise ValueError("GEMINI_BASE_URL or GEMINI_API_KEY not set in .env")
     
     gemini_client = AsyncOpenAI(
@@ -67,25 +67,30 @@ async def lifespan(app: FastAPI):
     )
     print("✅ Gemini client configured")
 
-    # 2. Determine Environment
-    app_env = os.getenv("APP_ENV", "development").lower()
+    # 2. SMARTER DETECTION LOGIC
+    # We check if TEMPORAL_ADDRESS is set. If yes, we force Cloud connection.
+    temporal_addr = os.getenv("TEMPORAL_ADDRESS")
     
-    # 3. Configure Temporal Connection
-    if app_env == "production":
-        # --- CLOUD CONFIGURATION (Vercel/GitHub) ---
-        print("☁️ Connecting to Temporal Cloud...")
+    print(f"DEBUG: Detected TEMPORAL_ADDRESS: {temporal_addr}")
+
+    if temporal_addr:
+        # --- CLOUD CONFIGURATION ---
+        print("☁️ TEMPORAL_ADDRESS found. Switching to Cloud Mode.")
         
-        temporal_addr = os.getenv("TEMPORAL_ADDRESS")
         temporal_ns = os.getenv("TEMPORAL_NAMESPACE")
-        
-        # Get certificate CONTENT from environment variables
         client_cert_content = os.getenv("TEMPORAL_CLIENT_CERT")
         client_key_content = os.getenv("TEMPORAL_CLIENT_KEY")
 
-        if not all([temporal_addr, temporal_ns, client_cert_content, client_key_content]):
-            raise ValueError("Missing Temporal Cloud config. Need ADDRESS, NAMESPACE, CLIENT_CERT, and CLIENT_KEY env vars.")
+        # Debug print to check if keys exist (printing length only for security)
+        print(f"DEBUG: Namespace: {temporal_ns}")
+        print(f"DEBUG: Cert Length: {len(client_cert_content) if client_cert_content else 0}")
+        print(f"DEBUG: Key Length: {len(client_key_content) if client_key_content else 0}")
 
-        # Create secure temporary files for the certs
+        if not all([temporal_ns, client_cert_content, client_key_content]):
+            print("❌ MISSING VARIABLES: You have the Address, but are missing the Namespace, Cert, or Key.")
+            raise ValueError("Cloud Config Incomplete: Ensure NAMESPACE, CLIENT_CERT, and CLIENT_KEY are set.")
+
+        # Create secure temporary files
         cert_path = None
         key_path = None
         
@@ -98,21 +103,19 @@ async def lifespan(app: FastAPI):
                 key_file.write(client_key_content)
                 key_path = key_file.name
 
-            # Create SSL Context using the temp files
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
             
-            # Connect to Cloud
             temporal_client = await Client.connect(
                 temporal_addr,
                 namespace=temporal_ns,
                 tls=ssl_context,
-                plugins=[
-                    OpenAIAgentsPlugin(model_provider=gemini_client)
-                ],
+                plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
             )
+        except Exception as e:
+            print(f"❌ CONNECTION FAILED: {str(e)}")
+            raise e
         finally:
-            # CLEANUP: Delete the temp files immediately after loading them
             if cert_path and os.path.exists(cert_path):
                 os.unlink(cert_path)
             if key_path and os.path.exists(key_path):
@@ -120,16 +123,14 @@ async def lifespan(app: FastAPI):
 
     else:
         # --- LOCAL CONFIGURATION ---
-        print("💻 Connecting to Local Temporal...")
+        print("💻 TEMPORAL_ADDRESS not found. Defaulting to Localhost (127.0.0.1).")
         temporal_client = await Client.connect(
             "localhost:7233",
             namespace="default", 
-            plugins=[
-                OpenAIAgentsPlugin(model_provider=gemini_client)
-            ],
+            plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
         )
 
-    print(f"✅ Connected to Temporal server ({app_env})")
+    print(f"✅ Connected to Temporal successfully")
 
     # 4. Start Worker
     worker = Worker(
@@ -139,13 +140,11 @@ async def lifespan(app: FastAPI):
         activities=[generate_outline_activity, generate_course_activity],
     )
     
-    # Start the worker in the background (non-blocking)
     worker_task = asyncio.create_task(worker.run())
     print("✅ Worker started")
 
-    yield  # Application is now running
+    yield
 
-    # 5. Cleanup on Shutdown
     print("🛑 Shutting down...")
     if worker_task:
         worker_task.cancel()
@@ -153,6 +152,14 @@ async def lifespan(app: FastAPI):
             await worker_task
         except asyncio.CancelledError:
             pass
+
+ 
+   
+
+    
+
+    
+    
 
 
 app = FastAPI(lifespan=lifespan)
@@ -195,6 +202,8 @@ async def create_curriculum(request: Request):
 
         workflow_id = f"course-gen-{uuid.uuid4()}"
         print(f"🚀 Starting workflow: {workflow_id}")
+
+        # agentops.start_trace(tags=[f"Course Generation {workflow_id}"])
 
         await temporal_client.start_workflow(
             CourseAgent.create_course,
@@ -241,6 +250,7 @@ async def get_workflow_status(workflow_id: str):
 
 
 # --- API Endpoint 3: Approve & Get Final Course ---
+
 @app.post("/generate-course/{workflow_id}")
 async def generate_course(workflow_id: str, request: Request):
     """
@@ -282,12 +292,8 @@ async def generate_course(workflow_id: str, request: Request):
         print(f"✅ Course saved with ID: {saved_course['course_id']}")
         
         # Update Gamification (XP & Streak)
-        # Note: Ensure this import works in your project structure
-        try:
-            from utils.gamification import update_user_gamification
-            await update_user_gamification(user_id, xp_reward=50) # 50 XP for completing a course
-        except ImportError:
-            print("⚠️ Gamification module not found, skipping XP update.")
+        from utils.gamification import update_user_gamification
+        await update_user_gamification(user_id, xp_reward=50) # 50 XP for completing a course
         
         return {
             "course_id": saved_course['course_id'],
@@ -301,6 +307,7 @@ async def generate_course(workflow_id: str, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 # --- API Endpoint 4: Code Review ---
 @app.post("/code-review")
 async def review_code(request: CodeReviewRequest):
@@ -308,6 +315,9 @@ async def review_code(request: CodeReviewRequest):
     Executes the Code Review pipeline with input validation guardrail and code review agent.
     """
     try:
+        # Start AgentOps tracing
+        # agentops.start_trace(tags=[f"Code Review {request.session_id}"])
+        
         # Validate inputs
         if not request.code or not request.code.strip():
             return CodeReviewResponse(
@@ -332,6 +342,7 @@ async def review_code(request: CodeReviewRequest):
         
         print(f"🔍 Starting code review for session: {request.session_id}")
         print(f"📝 Language: {request.language}")
+        print(f"📏 Code length: {len(request.code)} characters, {request.code.count(chr(10)) + 1} lines")
         
         # Run the agent (guardrail will be executed automatically)
         try:
@@ -374,11 +385,15 @@ async def review_code(request: CodeReviewRequest):
         )
 
 
+from fastapi.responses import StreamingResponse
+from openai.types.responses import ResponseTextDeltaEvent
+
 # --- API Endpoint 5: Mentor Chat (Streaming) ---
 @app.post("/mentor/chat")
 async def mentor_chat(request: MentorChatRequest):
     """
     AI Mentor chat endpoint with streaming support.
+    Maintains conversation history and provides personalized academic assistance.
     """
     # Validate inputs
     if not request.user_id or not request.user_id.strip():
@@ -389,8 +404,8 @@ async def mentor_chat(request: MentorChatRequest):
     
     print(f"💬 Mentor chat request from user: {request.user_id}")
     
+    # Retrieve user profile and courses (simplified for brevity, assume helper functions work)
     try:
-        # Retrieve user profile and courses
         # TEST BYPASS: Allow testing with specific ID
         if request.user_id == "user_2pM3p4q5r6s7t8u9v0w1x2y3z4":
             print("🧪 Using TEST PROFILE for verification")
@@ -451,6 +466,7 @@ async def mentor_chat(request: MentorChatRequest):
                     if event.data.delta:
                         yield f"data: {json.dumps({'content': event.data.delta})}\n\n"
                 elif event.type == "run_item_stream_event":
+                    # Handle guardrail tripwires if exposed via events, or other item updates
                     pass
             
             yield "data: [DONE]\n\n"
