@@ -45,7 +45,6 @@ from utils.stripe_utils import create_checkout_session, handle_webhook
 
 # agentops.init()
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events for FastAPI."""
@@ -53,7 +52,23 @@ async def lifespan(app: FastAPI):
     
     print("🚀 Starting up FastAPI application...")
 
-    # 1. Setup Gemini Client
+    # --- Helper to Fix Broken Certs ---
+    def fix_pem_formatting(pem_string: str, label: str) -> str:
+        """
+        Repairs a PEM string that has been flattened by Vercel/Env Vars.
+        Ensures headers are on their own lines.
+        """
+        # 1. Remove existing headers/footers to get just the base64 blob
+        clean_blob = pem_string.replace(f"-----BEGIN {label}-----", "")
+        clean_blob = clean_blob.replace(f"-----END {label}-----", "")
+        
+        # 2. Remove ALL whitespace (spaces, newlines, tabs) from the blob
+        clean_blob = "".join(clean_blob.split())
+        
+        # 3. Reconstruct valid PEM format
+        return f"-----BEGIN {label}-----\n{clean_blob}\n-----END {label}-----"
+
+    # 1. Setup Gemini
     base_url = os.getenv('GEMINI_BASE_URL')
     api_key = os.getenv('GEMINI_API_KEY')
     
@@ -61,73 +76,36 @@ async def lifespan(app: FastAPI):
         print("❌ Critical Error: Gemini Environment Variables missing.")
         raise ValueError("GEMINI_BASE_URL or GEMINI_API_KEY not set in .env")
     
-    gemini_client = AsyncOpenAI(
-        api_key=api_key,
-        base_url=base_url,
-    )
+    gemini_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
     print("✅ Gemini client configured")
 
-    # 2. SMARTER DETECTION LOGIC
-    # We check if TEMPORAL_ADDRESS is set. If yes, we force Cloud connection.
+    # 2. Temporal Connection Logic
     temporal_addr = os.getenv("TEMPORAL_ADDRESS")
     
-    print(f"DEBUG: Detected TEMPORAL_ADDRESS: {temporal_addr}")
-
     if temporal_addr:
-        # --- CLOUD CONFIGURATION ---
-        print("☁️ TEMPORAL_ADDRESS found. Switching to Cloud Mode.")
+        print(f"☁️ TEMPORAL_ADDRESS found: {temporal_addr}")
         
         temporal_ns = os.getenv("TEMPORAL_NAMESPACE")
-        client_cert_content = os.getenv("TEMPORAL_CLIENT_CERT")
-        client_key_content = os.getenv("TEMPORAL_CLIENT_KEY")
+        # Get raw content
+        raw_cert = os.getenv("TEMPORAL_CLIENT_CERT", "")
+        raw_key = os.getenv("TEMPORAL_CLIENT_KEY", "")
 
-        if not all([temporal_ns, client_cert_content, client_key_content]):
-            print("❌ MISSING VARIABLES: You have the Address, but are missing the Namespace, Cert, or Key.")
+        if not all([temporal_ns, raw_cert, raw_key]):
             raise ValueError("Cloud Config Incomplete: Ensure NAMESPACE, CLIENT_CERT, and CLIENT_KEY are set.")
 
         # ---------------------------------------------------------
-        # 🔧 THE FIX: REPAIR VERCEL NEWLINES
-        # Vercel often turns the cert into one long line. We must 
-        # replace literal "\n" characters with actual line breaks.
+        # 🔧 THE FIX: Aggressive Reformatting
+        # This fixes spaces, missing newlines, and Vercel flattening
         # ---------------------------------------------------------
-        client_cert_content = client_cert_content.replace("\\n", "\n")
-        client_key_content = client_key_content.replace("\\n", "\n")
+        print("🔧 Repairing Certificate Formatting...")
+        client_cert_content = fix_pem_formatting(raw_cert, "CERTIFICATE")
+        client_key_content = fix_pem_formatting(raw_key, "PRIVATE KEY")
 
-        # Create secure temporary files
+        # Debug: Print the first few chars to prove it's fixed (Headers should be clean)
+        print(f"DEBUG CERT START:\n{client_cert_content[:40]}...")
+
         cert_path = None
         key_path = None
-        
-        try:
-            # We write the REPAIRED content (with newlines) to the file
-            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
-                cert_file.write(client_cert_content)
-                cert_path = cert_file.name
-
-            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.key') as key_file:
-                key_file.write(client_key_content)
-                key_path = key_file.name
-
-            # Create SSL Context
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
-            
-            # Connect
-            temporal_client = await Client.connect(
-                temporal_addr,
-                namespace=temporal_ns,
-                tls=ssl_context,
-                plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
-            )
-        except Exception as e:
-            print(f"❌ CONNECTION FAILED: {str(e)}")
-            # Print the first 50 chars to debug if headers are correct
-            print(f"DEBUG CERT HEAD: {client_cert_content[:50]}")
-            raise e
-        finally:
-            if cert_path and os.path.exists(cert_path):
-                os.unlink(cert_path)
-            if key_path and os.path.exists(key_path):
-                os.unlink(key_path)
         
         try:
             with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
@@ -157,8 +135,7 @@ async def lifespan(app: FastAPI):
                 os.unlink(key_path)
 
     else:
-        # --- LOCAL CONFIGURATION ---
-        print("💻 TEMPORAL_ADDRESS not found. Defaulting to Localhost (127.0.0.1).")
+        print("💻 Defaulting to Localhost.")
         temporal_client = await Client.connect(
             "localhost:7233",
             namespace="default", 
@@ -167,7 +144,7 @@ async def lifespan(app: FastAPI):
 
     print(f"✅ Connected to Temporal successfully")
 
-    # 4. Start Worker
+    # 3. Start Worker
     worker = Worker(
         temporal_client,
         task_queue="my-task-queue",
@@ -187,14 +164,6 @@ async def lifespan(app: FastAPI):
             await worker_task
         except asyncio.CancelledError:
             pass
-
- 
-   
-
-    
-
-    
-    
 
 
 app = FastAPI(lifespan=lifespan)
