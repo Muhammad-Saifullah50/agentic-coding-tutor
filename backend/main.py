@@ -44,12 +44,35 @@ import base64
 # AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
 
 # agentops.init()
+import os
+import ssl
+import base64
+import tempfile
+import asyncio
+import textwrap # <--- Make sure this is imported
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global temporal_client, worker_task
     print("🚀 Starting up FastAPI application...")
 
-    # 1. Setup Gemini (Same as before)
+    # --- HELPER: REPAIR PEM STRUCTURE ---
+    def repair_pem(pem_str: str, label: str) -> str:
+        """
+        Takes a potentially broken/flattened PEM string and reconstructs it.
+        """
+        # 1. Clean up: Remove existing headers/footers and all whitespace
+        clean = pem_str.replace(f"-----BEGIN {label}-----", "") \
+                       .replace(f"-----END {label}-----", "")
+        clean = "".join(clean.split()) # Remove all spaces/newlines
+        
+        # 2. Re-chunk into 64-char lines (Strict PEM requirement)
+        body = "\n".join(textwrap.wrap(clean, 64))
+        
+        # 3. Add headers back
+        return f"-----BEGIN {label}-----\n{body}\n-----END {label}-----"
+
+    # 1. Setup Gemini
     base_url = os.getenv('GEMINI_BASE_URL')
     api_key = os.getenv('GEMINI_API_KEY')
     if not base_url or not api_key:
@@ -63,31 +86,40 @@ async def lifespan(app: FastAPI):
         print(f"☁️ TEMPORAL_ADDRESS found: {temporal_addr}")
         temporal_ns = os.getenv("TEMPORAL_NAMESPACE")
         
-        # READ BASE64 VARIABLES
+        # Read Base64 variables
         b64_cert = os.getenv("TEMPORAL_CLIENT_CERT_BASE64")
         b64_key = os.getenv("TEMPORAL_CLIENT_KEY_BASE64")
 
         if not all([temporal_ns, b64_cert, b64_key]):
-             # Fallback check for the old variable names just in case
              raise ValueError("Missing TEMPORAL_CLIENT_CERT_BASE64 or KEY_BASE64")
 
-        print("🔓 Decoding Base64 Credentials...")
+        print("🔓 Decoding and Repairing Credentials...")
         
         try:
-            # Decode the Base64 string back into the original PEM format
-            client_cert_content = base64.b64decode(b64_cert).decode("utf-8")
-            client_key_content = base64.b64decode(b64_key).decode("utf-8")
+            # 1. Decode Base64 to String
+            raw_cert = base64.b64decode(b64_cert).decode("utf-8")
+            raw_key = base64.b64decode(b64_key).decode("utf-8")
+
+            # 2. Force Repair the Structure (Fixes 'PEM lib' error)
+            final_cert = repair_pem(raw_cert, "CERTIFICATE")
+            final_key = repair_pem(raw_key, "PRIVATE KEY")
             
-            # Create secure temporary files
+            # Debug: Print first 2 lines to verify structure in logs
+            print(f"DEBUG CERT HEAD:\n{final_cert[:70]}...")
+
+            # 3. Write to temp files
+            cert_path = None
+            key_path = None
+            
             with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
-                cert_file.write(client_cert_content)
+                cert_file.write(final_cert)
                 cert_path = cert_file.name
 
             with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.key') as key_file:
-                key_file.write(client_key_content)
+                key_file.write(final_key)
                 key_path = key_file.name
 
-            # Connect
+            # 4. Connect
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
             
@@ -98,12 +130,14 @@ async def lifespan(app: FastAPI):
                 plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
             )
             
-            # Clean up temp files immediately
+            # Cleanup
             if os.path.exists(cert_path): os.unlink(cert_path)
             if os.path.exists(key_path): os.unlink(key_path)
 
         except Exception as e:
             print(f"❌ CONNECTION FAILED: {str(e)}")
+            # Print raw decoded string if it fails, to see if it's empty
+            # print(f"DEBUG RAW DECODED: {raw_cert[:50]}") 
             raise e
 
     else:
@@ -116,7 +150,6 @@ async def lifespan(app: FastAPI):
 
     print(f"✅ Connected to Temporal successfully")
 
-    # 3. Start Worker
     worker = Worker(
         temporal_client,
         task_queue="my-task-queue",
@@ -134,8 +167,6 @@ async def lifespan(app: FastAPI):
             await worker_task
         except asyncio.CancelledError:
             pass
-
-
 app = FastAPI(lifespan=lifespan)
 
 origins = ['*']

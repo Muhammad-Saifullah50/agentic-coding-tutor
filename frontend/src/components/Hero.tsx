@@ -117,7 +117,7 @@ const Hero = ({ userId }: { userId: string | undefined | null }) => {
                 </div>
               </div>
               <Image
-                src={'/ide-screenshot.jpg'}
+                src={'/landing-page-image.jpg'}
                 alt="Modern code editor with syntax highlighting and AI assistance"
                 className="w-full h-auto pt-12 group-hover:scale-[1.01] transition-transform duration-700 ease-out"
                 width={1400}
