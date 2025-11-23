@@ -39,75 +39,46 @@ from utils.mentor_utils import get_mentor_session, build_context_message
 from utils.supabase_client import supabase
 import stripe
 from utils.stripe_utils import create_checkout_session, handle_webhook
-
+import base64
 
 # AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
 
 # agentops.init()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events for FastAPI."""
     global temporal_client, worker_task
-    
     print("🚀 Starting up FastAPI application...")
 
-    # --- Helper to Fix Broken Certs ---
-    def fix_pem_formatting(pem_string: str, label: str) -> str:
-        """
-        Repairs a PEM string that has been flattened by Vercel/Env Vars.
-        Ensures headers are on their own lines.
-        """
-        # 1. Remove existing headers/footers to get just the base64 blob
-        clean_blob = pem_string.replace(f"-----BEGIN {label}-----", "")
-        clean_blob = clean_blob.replace(f"-----END {label}-----", "")
-        
-        # 2. Remove ALL whitespace (spaces, newlines, tabs) from the blob
-        clean_blob = "".join(clean_blob.split())
-        
-        # 3. Reconstruct valid PEM format
-        return f"-----BEGIN {label}-----\n{clean_blob}\n-----END {label}-----"
-
-    # 1. Setup Gemini
+    # 1. Setup Gemini (Same as before)
     base_url = os.getenv('GEMINI_BASE_URL')
     api_key = os.getenv('GEMINI_API_KEY')
-    
     if not base_url or not api_key:
-        print("❌ Critical Error: Gemini Environment Variables missing.")
-        raise ValueError("GEMINI_BASE_URL or GEMINI_API_KEY not set in .env")
-    
+        raise ValueError("GEMINI env vars missing")
     gemini_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-    print("✅ Gemini client configured")
 
-    # 2. Temporal Connection Logic
+    # 2. Check for Temporal Cloud
     temporal_addr = os.getenv("TEMPORAL_ADDRESS")
     
     if temporal_addr:
         print(f"☁️ TEMPORAL_ADDRESS found: {temporal_addr}")
-        
         temporal_ns = os.getenv("TEMPORAL_NAMESPACE")
-        # Get raw content
-        raw_cert = os.getenv("TEMPORAL_CLIENT_CERT", "")
-        raw_key = os.getenv("TEMPORAL_CLIENT_KEY", "")
+        
+        # READ BASE64 VARIABLES
+        b64_cert = os.getenv("TEMPORAL_CLIENT_CERT_BASE64")
+        b64_key = os.getenv("TEMPORAL_CLIENT_KEY_BASE64")
 
-        if not all([temporal_ns, raw_cert, raw_key]):
-            raise ValueError("Cloud Config Incomplete: Ensure NAMESPACE, CLIENT_CERT, and CLIENT_KEY are set.")
+        if not all([temporal_ns, b64_cert, b64_key]):
+             # Fallback check for the old variable names just in case
+             raise ValueError("Missing TEMPORAL_CLIENT_CERT_BASE64 or KEY_BASE64")
 
-        # ---------------------------------------------------------
-        # 🔧 THE FIX: Aggressive Reformatting
-        # This fixes spaces, missing newlines, and Vercel flattening
-        # ---------------------------------------------------------
-        print("🔧 Repairing Certificate Formatting...")
-        client_cert_content = fix_pem_formatting(raw_cert, "CERTIFICATE")
-        client_key_content = fix_pem_formatting(raw_key, "PRIVATE KEY")
-
-        # Debug: Print the first few chars to prove it's fixed (Headers should be clean)
-        print(f"DEBUG CERT START:\n{client_cert_content[:40]}...")
-
-        cert_path = None
-        key_path = None
+        print("🔓 Decoding Base64 Credentials...")
         
         try:
+            # Decode the Base64 string back into the original PEM format
+            client_cert_content = base64.b64decode(b64_cert).decode("utf-8")
+            client_key_content = base64.b64decode(b64_key).decode("utf-8")
+            
+            # Create secure temporary files
             with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
                 cert_file.write(client_cert_content)
                 cert_path = cert_file.name
@@ -116,6 +87,7 @@ async def lifespan(app: FastAPI):
                 key_file.write(client_key_content)
                 key_path = key_file.name
 
+            # Connect
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
             
@@ -125,14 +97,14 @@ async def lifespan(app: FastAPI):
                 tls=ssl_context,
                 plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
             )
+            
+            # Clean up temp files immediately
+            if os.path.exists(cert_path): os.unlink(cert_path)
+            if os.path.exists(key_path): os.unlink(key_path)
+
         except Exception as e:
             print(f"❌ CONNECTION FAILED: {str(e)}")
             raise e
-        finally:
-            if cert_path and os.path.exists(cert_path):
-                os.unlink(cert_path)
-            if key_path and os.path.exists(key_path):
-                os.unlink(key_path)
 
     else:
         print("💻 Defaulting to Localhost.")
@@ -151,13 +123,11 @@ async def lifespan(app: FastAPI):
         workflows=[CourseAgent],
         activities=[generate_outline_activity, generate_course_activity],
     )
-    
     worker_task = asyncio.create_task(worker.run())
     print("✅ Worker started")
 
     yield
 
-    print("🛑 Shutting down...")
     if worker_task:
         worker_task.cancel()
         try:
