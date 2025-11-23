@@ -56,22 +56,6 @@ async def lifespan(app: FastAPI):
     global temporal_client, worker_task
     print("🚀 Starting up FastAPI application...")
 
-    # --- HELPER: REPAIR PEM STRUCTURE ---
-    def repair_pem(pem_str: str, label: str) -> str:
-        """
-        Takes a potentially broken/flattened PEM string and reconstructs it.
-        """
-        # 1. Clean up: Remove existing headers/footers and all whitespace
-        clean = pem_str.replace(f"-----BEGIN {label}-----", "") \
-                       .replace(f"-----END {label}-----", "")
-        clean = "".join(clean.split()) # Remove all spaces/newlines
-        
-        # 2. Re-chunk into 64-char lines (Strict PEM requirement)
-        body = "\n".join(textwrap.wrap(clean, 64))
-        
-        # 3. Add headers back
-        return f"-----BEGIN {label}-----\n{body}\n-----END {label}-----"
-
     # 1. Setup Gemini
     base_url = os.getenv('GEMINI_BASE_URL')
     api_key = os.getenv('GEMINI_API_KEY')
@@ -79,69 +63,29 @@ async def lifespan(app: FastAPI):
         raise ValueError("GEMINI env vars missing")
     gemini_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
-    # 2. Check for Temporal Cloud
+    # 2. Check Environment
     temporal_addr = os.getenv("TEMPORAL_ADDRESS")
     
+    # --- SIMPLIFIED CONNECTION LOGIC ---
     if temporal_addr:
-        print(f"☁️ TEMPORAL_ADDRESS found: {temporal_addr}")
+        print(f"☁️ Cloud Mode: Connecting to {temporal_addr}")
         temporal_ns = os.getenv("TEMPORAL_NAMESPACE")
-        
-        # Read Base64 variables
-        b64_cert = os.getenv("TEMPORAL_CLIENT_CERT_BASE64")
-        b64_key = os.getenv("TEMPORAL_CLIENT_KEY_BASE64")
+        temporal_api_key = os.getenv("TEMPORAL_API_KEY") # <--- NEW
 
-        if not all([temporal_ns, b64_cert, b64_key]):
-             raise ValueError("Missing TEMPORAL_CLIENT_CERT_BASE64 or KEY_BASE64")
+        if not all([temporal_ns, temporal_api_key]):
+             raise ValueError("Missing TEMPORAL_NAMESPACE or TEMPORAL_API_KEY")
 
-        print("🔓 Decoding and Repairing Credentials...")
-        
-        try:
-            # 1. Decode Base64 to String
-            raw_cert = base64.b64decode(b64_cert).decode("utf-8")
-            raw_key = base64.b64decode(b64_key).decode("utf-8")
-
-            # 2. Force Repair the Structure (Fixes 'PEM lib' error)
-            final_cert = repair_pem(raw_cert, "CERTIFICATE")
-            final_key = repair_pem(raw_key, "PRIVATE KEY")
-            
-            # Debug: Print first 2 lines to verify structure in logs
-            print(f"DEBUG CERT HEAD:\n{final_cert[:70]}...")
-
-            # 3. Write to temp files
-            cert_path = None
-            key_path = None
-            
-            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.pem') as cert_file:
-                cert_file.write(final_cert)
-                cert_path = cert_file.name
-
-            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.key') as key_file:
-                key_file.write(final_key)
-                key_path = key_file.name
-
-            # 4. Connect
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            ssl_context.load_cert_chain(certfile=cert_path, keyfile=key_path)
-            
-            temporal_client = await Client.connect(
-                temporal_addr,
-                namespace=temporal_ns,
-                tls=ssl_context,
-                plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
-            )
-            
-            # Cleanup
-            if os.path.exists(cert_path): os.unlink(cert_path)
-            if os.path.exists(key_path): os.unlink(key_path)
-
-        except Exception as e:
-            print(f"❌ CONNECTION FAILED: {str(e)}")
-            # Print raw decoded string if it fails, to see if it's empty
-            # print(f"DEBUG RAW DECODED: {raw_cert[:50]}") 
-            raise e
+        # Connect using API Key (No cert files needed!)
+        temporal_client = await Client.connect(
+            temporal_addr,
+            namespace=temporal_ns,
+            api_key=temporal_api_key, # <--- The magic part
+            tls=True,                 # <--- Required for Cloud
+            plugins=[OpenAIAgentsPlugin(model_provider=gemini_client)],
+        )
 
     else:
-        print("💻 Defaulting to Localhost.")
+        print("💻 Local Mode: Connecting to Localhost")
         temporal_client = await Client.connect(
             "localhost:7233",
             namespace="default", 
@@ -150,6 +94,7 @@ async def lifespan(app: FastAPI):
 
     print(f"✅ Connected to Temporal successfully")
 
+    # 3. Start Worker
     worker = Worker(
         temporal_client,
         task_queue="my-task-queue",

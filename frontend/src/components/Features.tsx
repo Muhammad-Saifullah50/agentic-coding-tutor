@@ -7,7 +7,7 @@ const features = [
     {
         title: "Personalized Learning Dashboard",
         description: "Track your progress with an intuitive dashboard that shows your achievements, completed lessons, and personalized learning path. Get insights into your coding journey with detailed analytics and recommendations.",
-        image: '/dashboard-screenshot.jpg',
+        image: '/feature-dashboard.jpg',
         imageAlt: "AI Coding Tutor dashboard showing course progress and personalized learning paths",
         icon: LayoutDashboard,
         color: "text-blue-500",
