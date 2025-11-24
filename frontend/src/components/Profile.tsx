@@ -1,14 +1,11 @@
-'use client';
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Code2, ArrowLeft, Edit2, User, Target, Clock, Brain, Trophy, Award, Sparkles, Crown } from 'lucide-react';
-import { toast } from 'sonner';
+import { Code2, User, Target, Clock, Brain, Trophy, Award, Sparkles, Crown } from 'lucide-react';
 import { UserProfile } from '@/types/user';
 import Image from 'next/image';
+import { ProfileEditButton, PreferencesEditButton, OnboardingButton } from './client/ProfileActions';
+import { Button } from '@/components/ui/button';
 
 interface ProfileProps {
   userProfile: UserProfile | null;
@@ -21,16 +18,7 @@ interface ProfileProps {
 }
 
 const Profile = ({ userProfile, progressData }: ProfileProps) => {
-  const router = useRouter();
-  const [currentPlan] = useState('free'); // 'free', 'pro', 'premium'
-
-  const handleEditProfile = () => {
-    toast.info('Edit profile feature coming soon!');
-  };
-
-  const handleEditPreferences = () => {
-    router.push('/onboarding');
-  };
+  const currentPlan = 'free'; // 'free', 'pro', 'premium'
 
   if (!userProfile) {
     return (
@@ -41,9 +29,7 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
             <CardDescription>Please complete onboarding first</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.push('/onboarding')} className="w-full btn-hero">
-              Start Onboarding
-            </Button>
+            <OnboardingButton />
           </CardContent>
         </Card>
       </div>
@@ -95,15 +81,7 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
                     <CardDescription>Your account details</CardDescription>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEditProfile}
-                  className="rounded-xl gap-2"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Edit</span>
-                </Button>
+                <ProfileEditButton />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -139,15 +117,7 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
                     <CardDescription>Personalized for your journey</CardDescription>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEditPreferences}
-                  className="rounded-xl gap-2"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Edit</span>
-                </Button>
+                <PreferencesEditButton />
               </div>
             </CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-3">

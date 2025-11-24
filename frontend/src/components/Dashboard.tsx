@@ -1,11 +1,8 @@
-'use client';
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Code2, BookOpen, Play, Trophy, TrendingUp, Zap, Sparkles, Coins } from "lucide-react";
-import aiMentor from "./../../public/ai-mentor.jpg";
 
 import { FullCourseData } from "@/types/course";
 import { UserProfile } from "@/types/user";
@@ -16,7 +13,6 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ courses, userProfile }: DashboardProps) => {
-
 
   const userProgress = {
     currentStreak: userProfile?.streak || 0,
@@ -205,3 +201,4 @@ const Dashboard = ({ courses, userProfile }: DashboardProps) => {
 };
 
 export default Dashboard;
+

@@ -1,13 +1,8 @@
-'use client';
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Sparkles, ArrowRight, Code2, Terminal, Cpu } from "lucide-react";
-import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
-import Image from "next/image";
+import { Sparkles, Code2, Terminal, Cpu } from "lucide-react";
+import { HeroButtons } from "./client/HeroButtons";
+import { HeroScreenshot } from "./client/HeroScreenshot";
 
 const Hero = ({ userId }: { userId: string | undefined | null }) => {
-  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
-
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
       {/* Animated Background */}
@@ -40,40 +35,7 @@ const Hero = ({ userId }: { userId: string | undefined | null }) => {
             Accelerate your journey from beginner to pro with personalized AI mentorship, interactive challenges, and real-time code analysis.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-5 justify-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
-            {userId ? (
-              <Link href="/dashboard">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto text-lg px-10 py-7 rounded-2xl shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:scale-105 transition-all duration-300 bg-primary hover:bg-primary/90"
-                >
-                  Dashboard
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/signup">
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto text-lg px-10 py-7 rounded-2xl shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:scale-105 transition-all duration-300 bg-primary hover:bg-primary/90"
-                  >
-                    Start Learning Free
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-                <Link href="#features">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto text-lg px-10 py-7 rounded-2xl hover:scale-105 transition-all duration-300 backdrop-blur-sm border-2 hover:bg-accent/5"
-                  >
-                    Explore Features
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+          <HeroButtons userId={userId} />
 
           {/* Stats */}
           <div className="flex flex-wrap gap-8 md:gap-16 justify-center pt-10 border-t border-border/40 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 fill-mode-both">
@@ -96,45 +58,7 @@ const Hero = ({ userId }: { userId: string | undefined | null }) => {
         </div>
 
         {/* IDE Screenshot Below Hero */}
-        <div
-          ref={elementRef}
-          className={`mt-20 md:mt-32 max-w-7xl mx-auto transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0 rotate-0' : 'opacity-0 translate-y-20 rotate-x-12'
-            }`}
-          style={{ perspective: '2000px' }}
-        >
-          <div className="relative group rounded-3xl">
-            {/* Animated glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-[2rem] opacity-30 group-hover:opacity-50 transition-opacity duration-500 blur-2xl" />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 rounded-[2rem] blur-3xl" />
-
-            <div className="relative rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-background/50 backdrop-blur-xl">
-              <div className="absolute top-0 left-0 right-0 h-12 bg-muted/50 border-b border-white/5 flex items-center px-6 gap-2 z-10">
-                <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                <div className="ml-4 px-4 py-1 rounded-md bg-background/50 text-xs text-muted-foreground font-mono border border-white/5">
-                  agentic-tutor.tsx
-                </div>
-              </div>
-              <Image
-                src={'/landing-page-image.jpg'}
-                alt="Modern code editor with syntax highlighting and AI assistance"
-                className="w-full h-auto pt-12 group-hover:scale-[1.01] transition-transform duration-700 ease-out"
-                width={1400}
-                height={900}
-                priority
-              />
-
-              {/* Floating UI Elements (Decorative) */}
-              <div className="absolute bottom-8 right-8 p-4 rounded-xl bg-background/80 backdrop-blur-md border border-white/10 shadow-xl animate-float hidden md:block">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-sm font-medium">AI Assistant Active</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <HeroScreenshot />
       </div>
     </section>
   );

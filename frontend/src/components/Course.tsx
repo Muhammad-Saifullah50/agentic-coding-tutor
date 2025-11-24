@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { LessonSidebar } from "@/components/course/LessonSidebar";
 import { LessonContent } from "@/components/course/LessonContent";
