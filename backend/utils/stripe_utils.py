@@ -26,7 +26,7 @@ def create_checkout_session(user_id: str, email: str, plan_key: str, success_url
     )
     return {"session_id": session.id, "url": session.url}
 def handle_webhook(event: dict):
-    from config.payment_constants import PRICE_IDS
+    from config.payment_constants import PRICE_IDS, PLAN_CREDITS
     event_type = event.get("type")
     data = event.get("data", {}).get("object", {})
     if event_type == "checkout.session.completed":
@@ -41,18 +41,18 @@ def handle_webhook(event: dict):
         line_items = stripe.checkout.Session.list_line_items(data["id"])
         price_id = line_items.data[0].price.id if line_items.data else None
         plan_key = next((k for k, v in PRICE_IDS.items() if v == price_id), None)
+        
         # Update user profile
         updates = {
             "subscription_plan": plan_key,
             "stripe_subscription_id": subscription,
         }
-        # Set initial credits based on plan
-        if plan_key == "free":
-            updates["credits"] = 20
-        elif plan_key == "plus":
-            updates["credits"] = 50
-        elif plan_key == "pro":
-            updates["credits"] = 100
+        
+        # Get current credits and add plan credits (don't replace)
+        current_credits = user.get("credits", 0) or 0
+        credits_to_add = PLAN_CREDITS.get(plan_key, 0)
+        updates["credits"] = current_credits + credits_to_add
+        
         supabase.table("UserProfile").update(updates).eq("id", user["id"]).execute()
     elif event_type == "invoice.payment_failed":
         # Handle payment failure (optional: downgrade plan, notify user)

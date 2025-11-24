@@ -19,6 +19,10 @@ export interface UserProfile {
   courses: number;
   onBoarded: boolean;
   imageUrl: string;
+
+  // Subscription & Credits
+  subscription_plan?: 'free' | 'plus' | 'pro';
+  credits?: number;
 }
 
 // Partial type for when creating/updating a profile

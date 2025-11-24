@@ -18,7 +18,16 @@ interface ProfileProps {
 }
 
 const Profile = ({ userProfile, progressData }: ProfileProps) => {
-  const currentPlan = 'free'; // 'free', 'pro', 'premium'
+  // Get current plan from user profile, default to 'free'
+  const currentPlan = userProfile?.subscription_plan || 'free';
+  const currentCredits = userProfile?.credits || 0;
+
+  // Plan details
+  const planDetails = {
+    free: { name: 'Free Plan', description: '2 course generations', color: 'bg-muted' },
+    plus: { name: 'Plus Plan', description: '5 course generations', color: 'bg-primary' },
+    pro: { name: 'Pro Plan', description: '10 course generations', color: 'bg-gradient-to-r from-primary to-secondary' }
+  };
 
   if (!userProfile) {
     return (
@@ -217,38 +226,54 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Current Plan */}
               <div className="p-4 rounded-lg border border-border bg-card">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Current Plan</span>
-                  {currentPlan === 'free' && (
-                    <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium">Free</span>
-                  )}
-                  {currentPlan === 'pro' && (
-                    <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">Pro</span>
-                  )}
-                  {currentPlan === 'premium' && (
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary to-secondary text-white text-xs font-medium">Premium</span>
-                  )}
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${currentPlan === 'free' ? 'bg-muted text-foreground' :
+                      currentPlan === 'plus' ? 'bg-primary' :
+                        'bg-gradient-to-r from-primary to-secondary'
+                    }`}>
+                    {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+                  </span>
                 </div>
                 <p className="font-semibold text-lg mb-1">
-                  {currentPlan === 'free' && 'Free Plan'}
-                  {currentPlan === 'pro' && 'Pro Plan'}
-                  {currentPlan === 'premium' && 'Premium Plan'}
+                  {planDetails[currentPlan as keyof typeof planDetails]?.name || 'Free Plan'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {currentPlan === 'free' && '5 AI lessons per month'}
-                  {currentPlan === 'pro' && 'Unlimited lessons + analytics'}
-                  {currentPlan === 'premium' && 'Everything + 1:1 AI sessions'}
+                  {planDetails[currentPlan as keyof typeof planDetails]?.description || '2 course generations'}
                 </p>
               </div>
 
-              {currentPlan === 'free' && (
+              {/* Credits */}
+              <div className="p-4 rounded-lg border border-border bg-card">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Available Credits</span>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-lg font-bold text-primary">{currentCredits}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use credits to generate courses and access premium features
+                </p>
+              </div>
+
+              {/* Upgrade Button */}
+              {currentPlan !== 'pro' && (
                 <Link href="/pricing">
                   <Button className="w-full btn-hero rounded-xl gap-2">
                     <Award className="w-5 h-5" />
-                    Upgrade Plan
+                    {currentPlan === 'free' ? 'Upgrade Plan' : 'Upgrade to Pro'}
                   </Button>
                 </Link>
+              )}
+
+              {currentPlan === 'pro' && (
+                <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <Trophy className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="text-sm font-medium text-primary">You're on the best plan! 🎉</p>
+                </div>
               )}
 
               {currentPlan !== 'free' && (

@@ -98,7 +98,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       }
 
       try {
-        const res = await fetch(`http://localhost:8000/workflow-status/${wfId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/workflow-status/${wfId}`);
         if (!res.ok) throw new Error('Failed to fetch workflow status');
 
         const statusData = await res.json();
@@ -160,7 +160,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     setOutlineToastId(toastId);
 
     try {
-      const res = await fetch('http://localhost:8000/create-curriculum', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/create-curriculum`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -203,7 +203,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     const courseToastId = toast.loading('Course is being generated, takes 4-5 mins. You can navigate to other pages.');
 
     try {
-      const res = await fetch(`http://localhost:8000/generate-course/${workflowId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/generate-course/${workflowId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approved: true, userId: userProfile.userId }),
@@ -266,7 +266,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     }
 
     try {
-      await fetch(`http://localhost:8000/generate-course/${workflowId}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/generate-course/${workflowId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approved: false }),
