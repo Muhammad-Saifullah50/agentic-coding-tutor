@@ -142,8 +142,8 @@ const Pricing = () => {
 
         const data = await response.json();
 
-        // Check if we got a session ID
-        if (!data.sessionId) {
+        // Check if we got a session URL
+        if (!data.url) {
           throw new Error(
             data.detail || "Failed to create checkout session. Please try again."
           );
@@ -157,13 +157,9 @@ const Pricing = () => {
           description: "You'll be redirected to Stripe in a moment",
         });
 
-        // Redirect to Stripe Checkout using the modern approach
-        // Note: The backend should return the session URL, but if it only returns sessionId,
-        // we can construct the URL or use the session ID directly
-        const stripeCheckoutUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
-
-        // Use window.location for instant redirect (more reliable than router.push for external URLs)
-        window.location.href = stripeCheckoutUrl;
+        // Redirect to Stripe Checkout URL
+        router.push(data.url)
+        
       } catch (error) {
         // Dismiss loading toast
         toast.dismiss(loadingToast);

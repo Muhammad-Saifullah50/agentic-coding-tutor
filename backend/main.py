@@ -452,8 +452,8 @@ async def stripe_create_checkout(request: Request):
     if not user_id or not email or not plan:
         raise HTTPException(status_code=400, detail="Missing required fields")
     try:
-        session_id = create_checkout_session(user_id, email, plan, success_url, cancel_url)
-        return {"sessionId": session_id}
+        result = create_checkout_session(user_id, email, plan, success_url, cancel_url)
+        return {"sessionId": result["session_id"], "url": result["url"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

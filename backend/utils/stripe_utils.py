@@ -24,7 +24,7 @@ def create_checkout_session(user_id: str, email: str, plan_key: str, success_url
         success_url=success_url,
         cancel_url=cancel_url,
     )
-    return session.id
+    return {"session_id": session.id, "url": session.url}
 def handle_webhook(event: dict):
     from config.payment_constants import PRICE_IDS
     event_type = event.get("type")
