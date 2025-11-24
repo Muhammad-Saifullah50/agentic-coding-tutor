@@ -157,22 +157,13 @@ const Pricing = () => {
           description: "You'll be redirected to Stripe in a moment",
         });
 
-        // Load Stripe and redirect
-        const stripe = await (await import("@stripe/stripe-js")).loadStripe(
-          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-        );
+        // Redirect to Stripe Checkout using the modern approach
+        // Note: The backend should return the session URL, but if it only returns sessionId,
+        // we can construct the URL or use the session ID directly
+        const stripeCheckoutUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
 
-        if (!stripe) {
-          throw new Error("Failed to load payment provider. Please try again.");
-        }
-
-        const { error } = await stripe.redirectToCheckout({
-          sessionId: data.sessionId,
-        });
-
-        if (error) {
-          throw new Error(error.message || "Failed to redirect to checkout");
-        }
+        // Use window.location for instant redirect (more reliable than router.push for external URLs)
+        window.location.href = stripeCheckoutUrl;
       } catch (error) {
         // Dismiss loading toast
         toast.dismiss(loadingToast);
@@ -325,8 +316,8 @@ const Pricing = () => {
               <CardFooter className="pt-8 pb-10 relative z-10">
                 <Button
                   className={`w-full h-12 rounded-xl text-base font-medium transition-all duration-300 ${plan.popular
-                      ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
-                      : "bg-muted hover:bg-muted/80 text-foreground hover:scale-[1.02]"
+                    ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
+                    : "bg-muted hover:bg-muted/80 text-foreground hover:scale-[1.02]"
                     }`}
                   variant={plan.popular ? "default" : "secondary"}
                   onClick={() => handleUpgrade(plan.key)}
@@ -351,4 +342,4 @@ const Pricing = () => {
 };
 
 export default Pricing;
-       
+
