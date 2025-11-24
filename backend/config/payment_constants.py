@@ -9,7 +9,7 @@
 # 3. Paste the Price IDs below (format: price_xxxxxxxxxxxxx)
 # ====================================================================
 
-from python_dotenv import load_dotenv
+from dotenv import load_dotenv
 import os
 load_dotenv()
 
