@@ -51,9 +51,5 @@ describe('Hero Component', () => {
         expect(screen.queryByText('Start Learning Free')).not.toBeInTheDocument();
     });
 
-    it('renders stats', () => {
-        render(<Hero userId={null} />);
-        expect(screen.getByText('10k+')).toBeInTheDocument();
-        expect(screen.getByText('Active Learners')).toBeInTheDocument();
-    });
+    
 });

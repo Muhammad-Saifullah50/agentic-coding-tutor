@@ -37,24 +37,6 @@ const Hero = ({ userId }: { userId: string | undefined | null }) => {
 
           <HeroButtons userId={userId} />
 
-          {/* Stats */}
-          <div className="flex flex-wrap gap-8 md:gap-16 justify-center pt-10 border-t border-border/40 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 fill-mode-both">
-            {[
-              { label: "Active Learners", value: "10k+", icon: Terminal },
-              { label: "Programming Languages", value: "5+", icon: Code2 },
-              { label: "AI-Powered Lessons", value: "100+", icon: Cpu },
-            ].map((stat, index) => (
-              <div key={index} className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-muted/50 transition-colors duration-300">
-                <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
-                  <stat.icon className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* IDE Screenshot Below Hero */}
