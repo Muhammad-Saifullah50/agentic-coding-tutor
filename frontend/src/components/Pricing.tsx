@@ -1,12 +1,13 @@
 'use client'
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Check, Zap, Shield, Star } from "lucide-react";
+import { Check, Zap, Shield, Star, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { PLANS } from "@/config/paymentConstants";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -79,56 +80,117 @@ const plans = [
 
 const Pricing = () => {
   const [currency, setCurrency] = useState<"usd" | "pkr">("usd");
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
   const { user } = useUser();
   const router = useRouter();
 
   const handleUpgrade = async (planKey: keyof typeof PLANS) => {
-    if (!user) {
-      router.push("/sign-in");
-      return;
-    }
-
-    if (planKey === "free") {
-      router.push("/dashboard");
-      return;
-    }
+    // Set loading state for this plan
+    setLoadingPlan(planKey);
 
     try {
-      const successUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard?session=success`;
-      const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/pricing?session=cancel`;
+      // Check if user is authenticated
+      if (!user) {
+        toast.error("Please sign in to continue", {
+          description: "You need to be signed in to upgrade your plan",
+        });
+        router.push("/sign-in");
+        return;
+      }
 
-      const response = await fetch("/api/stripe/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planKey,
-          userId: user.id,
-          email: user.emailAddresses?.[0]?.emailAddress || "",
-          successUrl,
-          cancelUrl,
-        }),
+      // Handle free tier - no payment needed
+      if (planKey === "free") {
+        toast.success("Welcome to CodeQuora!", {
+          description: "You're all set with the free plan",
+        });
+        router.push("/dashboard");
+        return;
+      }
+
+      // Show loading toast
+      const loadingToast = toast.loading("Setting up checkout...", {
+        description: "Please wait while we prepare your payment",
       });
 
-      const data = await response.json();
+      try {
+        const successUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/dashboard?session=success`;
+        const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/pricing?session=cancel`;
 
-      if (data.sessionId) {
+        // Create checkout session
+        const response = await fetch("/api/stripe/create-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            planKey,
+            userId: user.id,
+            email: user.emailAddresses?.[0]?.emailAddress || "",
+            successUrl,
+            cancelUrl,
+          }),
+        });
+
+        // Handle non-200 responses
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.detail || `Server error: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        // Check if we got a session ID
+        if (!data.sessionId) {
+          throw new Error(
+            data.detail || "Failed to create checkout session. Please try again."
+          );
+        }
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        // Show redirecting message
+        toast.success("Redirecting to checkout...", {
+          description: "You'll be redirected to Stripe in a moment",
+        });
+
+        // Load Stripe and redirect
         const stripe = await (await import("@stripe/stripe-js")).loadStripe(
           process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
         );
 
-        if (stripe) {
-          const { error } = await stripe.redirectToCheckout({
-            sessionId: data.sessionId,
-          });
-
-          if (error) console.error("Stripe redirect error:", error);
+        if (!stripe) {
+          throw new Error("Failed to load payment provider. Please try again.");
         }
-      } else {
-        console.error("Failed to create checkout session", data);
+
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: data.sessionId,
+        });
+
+        if (error) {
+          throw new Error(error.message || "Failed to redirect to checkout");
+        }
+      } catch (error) {
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        // Show error toast with details
+        const errorMessage =
+          error instanceof Error ? error.message : "An unexpected error occurred";
+
+        toast.error("Checkout failed", {
+          description: errorMessage,
+          duration: 5000,
+        });
+
+        console.error("Payment error:", error);
       }
-    } catch (error) {
-      console.error("Error during checkout:", error);
+    } finally {
+      // Clear loading state
+      setLoadingPlan(null);
     }
   };
 
@@ -154,9 +216,8 @@ const Pricing = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div
-          className={`text-center mb-20 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
+          className={`text-center mb-20 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
         >
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
             Simple, Transparent{" "}
@@ -174,22 +235,20 @@ const Pricing = () => {
           <div className="inline-flex items-center p-1.5 bg-muted rounded-full border border-border/50 shadow-sm">
             <button
               onClick={() => setCurrency("usd")}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                currency === "usd"
-                  ? "bg-background text-foreground shadow-md scale-105"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${currency === "usd"
+                ? "bg-background text-foreground shadow-md scale-105"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               International (USD)
             </button>
 
             <button
               onClick={() => setCurrency("pkr")}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                currency === "pkr"
-                  ? "bg-background text-foreground shadow-md scale-105"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${currency === "pkr"
+                ? "bg-background text-foreground shadow-md scale-105"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               Pakistan (PKR) 🇵🇰
             </button>
@@ -201,15 +260,13 @@ const Pricing = () => {
           {plans.map((plan, index) => (
             <Card
               key={index}
-              className={`relative flex flex-col transition-all duration-500 group hover:shadow-2xl hover:-translate-y-2 overflow-hidden ${
-                plan.popular
-                  ? "border-primary shadow-xl md:scale-105 z-10 bg-card"
-                  : "border-border/50 bg-card/50 hover:bg-card"
-              } ${
-                isVisible
+              className={`relative flex flex-col transition-all duration-500 group hover:shadow-2xl hover:-translate-y-2 overflow-hidden ${plan.popular
+                ? "border-primary shadow-xl md:scale-105 z-10 bg-card"
+                : "border-border/50 bg-card/50 hover:bg-card"
+                } ${isVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-20"
-              }`}
+                }`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
               {plan.popular && (
@@ -250,11 +307,10 @@ const Pricing = () => {
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3 group/item">
                       <div
-                        className={`mt-0.5 rounded-full p-0.5 ${
-                          plan.popular
-                            ? "bg-primary/10 text-primary"
-                            : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                        } transition-colors duration-300`}
+                        className={`mt-0.5 rounded-full p-0.5 ${plan.popular
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                          } transition-colors duration-300`}
                       >
                         <Check className="w-3.5 h-3.5" />
                       </div>
@@ -268,15 +324,22 @@ const Pricing = () => {
 
               <CardFooter className="pt-8 pb-10 relative z-10">
                 <Button
-                  className={`w-full h-12 rounded-xl text-base font-medium transition-all duration-300 ${
-                    plan.popular
+                  className={`w-full h-12 rounded-xl text-base font-medium transition-all duration-300 ${plan.popular
                       ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02]"
                       : "bg-muted hover:bg-muted/80 text-foreground hover:scale-[1.02]"
-                  }`}
+                    }`}
                   variant={plan.popular ? "default" : "secondary"}
                   onClick={() => handleUpgrade(plan.key)}
+                  disabled={loadingPlan !== null}
                 >
-                  {plan.cta}
+                  {loadingPlan === plan.key ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    plan.cta
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -284,6 +347,13 @@ const Pricing = () => {
         </div>
       </div>
     </section>
+  );
+};
+
+export default Pricing;
+        </div >
+      </div >
+    </section >
   );
 };
 

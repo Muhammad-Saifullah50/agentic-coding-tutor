@@ -13,18 +13,18 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-plus_plan_id = os.getenv("PLUS_PLAN_ID")
-pro_plan_id = os.getenv("PRO_PLAN_ID")
+plus_plan_price_id = os.getenv("PLUS_PLAN_PRICE_ID")
+pro_plan_price_id = os.getenv("PRO_PLAN_PRICE_ID")
 
 PRICE_IDS = {
     "free": None,  # Free tier - no Stripe checkout needed
-    "plus": plus_plan_id,   # TODO: Replace with actual Price ID from Stripe Dashboard
-    "pro": pro_plan_id,      # TODO: Replace with actual Price ID from Stripe Dashboard
+    "plus": plus_plan_price_id,   # TODO: Replace with actual Price ID from Stripe Dashboard
+    "pro": pro_plan_price_id,      # TODO: Replace with actual Price ID from Stripe Dashboard
 }
 
 # Plan credits (automatically assigned after successful payment)
 PLAN_CREDITS = {
-    "free": 20,
-    "plus": 50,
-    "pro": 100,
+    "free": 2,
+    "plus": 5,
+    "pro": 10,
 }
