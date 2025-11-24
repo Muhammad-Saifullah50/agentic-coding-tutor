@@ -267,5 +267,5 @@ const Pricing = () => {
       </section>
     );
   };
-
-  export default Pricing;
+}
+export default Pricing
