@@ -351,10 +351,4 @@ const Pricing = () => {
 };
 
 export default Pricing;
-        </div >
-      </div >
-    </section >
-  );
-};
-
-export default Pricing;
+       
