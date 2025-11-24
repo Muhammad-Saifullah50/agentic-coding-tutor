@@ -10,9 +10,8 @@ def get_or_create_customer(user_id: str, email: str):
     customer = stripe.Customer.create(email=email, metadata={"user_id": user_id})
     supabase.table("UserProfile").update({"stripe_customer_id": customer.id}).eq("userId", user_id).execute()
     return customer.id
-# Create a checkout session for a subscription plan
 def create_checkout_session(user_id: str, email: str, plan_key: str, success_url: str, cancel_url: str):
-    from .config.payment_constants import PRICE_IDS
+    from config.payment_constants import PRICE_IDS
     if plan_key not in PRICE_IDS:
         raise ValueError(f"Unknown plan: {plan_key}")
     price_id = PRICE_IDS[plan_key]
@@ -26,9 +25,8 @@ def create_checkout_session(user_id: str, email: str, plan_key: str, success_url
         cancel_url=cancel_url,
     )
     return session.id
-# Handle webhook events and update Supabase user profile
 def handle_webhook(event: dict):
-    from .config.payment_constants import PRICE_IDS
+    from config.payment_constants import PRICE_IDS
     event_type = event.get("type")
     data = event.get("data", {}).get("object", {})
     if event_type == "checkout.session.completed":
