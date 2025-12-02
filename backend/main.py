@@ -115,7 +115,7 @@ async def lifespan(app: FastAPI):
             pass
 app = FastAPI(lifespan=lifespan)
 
-origins = ['*']
+origins = ['http://localhost:3000', 'https://codequora-backend.vercel.app']
 
 app.add_middleware(
     CORSMiddleware,

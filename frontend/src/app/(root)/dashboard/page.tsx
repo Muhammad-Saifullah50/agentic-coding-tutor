@@ -4,6 +4,13 @@ import Dashboard from "@/components/Dashboard";
 import { PaymentSuccessHandler } from "@/components/client/PaymentSuccessHandler";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard | CodeQuora",
+  description: "Track your learning progress, manage your courses, and view your achievements on your personalized dashboard.",
+    robots: { index: false, follow: false },
+};
 
 const DashboardPage = async () => {
   const user = await currentUser();

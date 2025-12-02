@@ -6,6 +6,7 @@ import { UserProfile } from '@/types/user';
 import Image from 'next/image';
 import { ProfileEditButton, PreferencesEditButton, OnboardingButton } from './client/ProfileActions';
 import { Button } from '@/components/ui/button';
+import { PLAN_DETAILS } from '@/config/paymentConstants';
 
 interface ProfileProps {
   userProfile: UserProfile | null;
@@ -21,13 +22,6 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
   // Get current plan from user profile, default to 'free'
   const currentPlan = userProfile?.subscription_plan || 'free';
   const currentCredits = userProfile?.credits || 0;
-
-  // Plan details
-  const planDetails = {
-    free: { name: 'Free Plan', description: '2 course generations', color: 'bg-muted' },
-    plus: { name: 'Plus Plan', description: '5 course generations', color: 'bg-primary' },
-    pro: { name: 'Pro Plan', description: '10 course generations', color: 'bg-gradient-to-r from-primary to-secondary' }
-  };
 
   if (!userProfile) {
     return (
@@ -231,17 +225,17 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Current Plan</span>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${currentPlan === 'free' ? 'bg-muted text-foreground' :
-                      currentPlan === 'plus' ? 'bg-primary' :
-                        'bg-gradient-to-r from-primary to-secondary'
+                    currentPlan === 'plus' ? 'bg-primary' :
+                      'bg-gradient-to-r from-primary to-secondary'
                     }`}>
                     {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
                   </span>
                 </div>
                 <p className="font-semibold text-lg mb-1">
-                  {planDetails[currentPlan as keyof typeof planDetails]?.name || 'Free Plan'}
+                  {PLAN_DETAILS[currentPlan as keyof typeof PLAN_DETAILS]?.name || 'Free Plan'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {planDetails[currentPlan as keyof typeof planDetails]?.description || '2 course generations'}
+                  {PLAN_DETAILS[currentPlan as keyof typeof PLAN_DETAILS]?.description || '2 course generations'}
                 </p>
               </div>
 

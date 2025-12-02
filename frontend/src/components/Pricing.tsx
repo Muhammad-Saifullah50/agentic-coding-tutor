@@ -1,7 +1,7 @@
 'use client'
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Check, Zap, Shield, Star, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,74 +9,8 @@ import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { PLANS } from "@/config/paymentConstants";
 import { toast } from "sonner";
 
-const plans = [
-  {
-    name: "Free",
-    key: "free",
-    price: { usd: "$0", pkr: "₨0" },
-    period: "forever",
-    description: "Perfect for getting started",
-    features: [
-      "2 course generations",
-      "2 credits",
-      "Progress tracking",
-      "Advanced code playground",
-      "AI mentor chat",
-      "Code review feedback",
-      "Priority support",
-    ],
-    cta: "Get Started",
-    popular: false,
-    icon: Star,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-200",
-  },
-  {
-    name: "Plus",
-    key: "plus",
-    price: { usd: "$50", pkr: "₨14,000" },
-    period: "/month",
-    description: "For serious learners",
-    features: [
-      "5 course generations",
-      "5 credits",
-      "Progress tracking",
-      "Advanced code playground",
-      "AI mentor chat",
-      "Code review feedback",
-      "Priority support",
-    ],
-    cta: "Upgrade to Plus",
-    popular: true,
-    icon: Zap,
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
-    borderColor: "border-amber-200",
-  },
-  {
-    name: "Pro",
-    key: "pro",
-    price: { usd: "$80", pkr: "₨22,500" },
-    period: "/month",
-    description: "For aspiring developers",
-    features: [
-      "10 course generations",
-      "10 credits",
-      "Progress tracking",
-      "Advanced code playground",
-      "AI mentor chat",
-      "Code review feedback",
-      "Priority support",
-    ],
-    cta: "Upgrade to Pro",
-    popular: false,
-    icon: Shield,
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
-    borderColor: "border-green-200",
-  },
-];
+// Convert PLANS object to array for rendering
+const plans = Object.values(PLANS);
 
 const Pricing = () => {
   const [currency, setCurrency] = useState<"usd" | "pkr">("usd");
@@ -85,7 +19,7 @@ const Pricing = () => {
   const { user } = useUser();
   const router = useRouter();
 
-  const handleUpgrade = async (planKey: keyof typeof PLANS) => {
+  const handleUpgrade = async (planKey: string) => {
     // Set loading state for this plan
     setLoadingPlan(planKey);
 
@@ -159,7 +93,7 @@ const Pricing = () => {
 
         // Redirect to Stripe Checkout URL
         router.push(data.url)
-        
+
       } catch (error) {
         // Dismiss loading toast
         toast.dismiss(loadingToast);

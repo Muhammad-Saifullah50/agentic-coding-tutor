@@ -4,8 +4,8 @@
 # Get these from: https://dashboard.stripe.com/test/products
 # 
 # Steps:
-# 1. Create "Plus Plan" product with $50/month → Copy the Price ID
-# 2. Create "Pro Plan" product with $80/month → Copy the Price ID
+# 1. Create "Plus Plan" product with $5/month → Copy the Price ID
+# 2. Create "Pro Plan" product with $8/month → Copy the Price ID
 # 3. Paste the Price IDs below (format: price_xxxxxxxxxxxxx)
 # ====================================================================
 
@@ -23,8 +23,9 @@ PRICE_IDS = {
 }
 
 # Plan credits (automatically assigned after successful payment)
+# Note: 1 course generation = 10 credits
 PLAN_CREDITS = {
-    "free": 2,
-    "plus": 5,
-    "pro": 10,
+    "free": 20,   # 2 course generations
+    "plus": 50,   # 5 course generations
+    "pro": 100,   # 10 course generations
 }
