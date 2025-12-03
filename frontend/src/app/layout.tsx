@@ -6,7 +6,7 @@ import {
   ClerkProvider
 } from '@clerk/nextjs'
 import Navbar from '@/components/Navbar'
-import MentorChatbox from '@/components/MentorChatbox'
+import MentorChat from '@/components/MentorChat'
 import { getCurrentUserWithProfile } from '@/actions/profile.actions'
 import { redirect } from 'next/navigation'
 
@@ -49,7 +49,7 @@ export default async function RootLayout({
                 }}
               />
               <ShadcnToaster />
-              <MentorChatbox />
+              <MentorChat />
             </main>
           </ThemeProvider>
         </body>
