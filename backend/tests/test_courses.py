@@ -3,22 +3,35 @@ from httpx import AsyncClient
 from unittest.mock import MagicMock
 
 @pytest.mark.asyncio
-async def test_generate_course_plan(client: AsyncClient, mock_temporal):
+async def test_generate_course_plan(client: AsyncClient, mock_temporal, mock_supabase):
     """Test triggering course generation."""
     payload = {
-        "topic": "Python Basics",
-        "user_id": "test_user_123"
+        "preferences": {
+            "language": "Python",
+            "focus": "Basics"
+        },
+        "userProfile": {
+            "userId": "test_user_123"
+        }
     }
     
     # Mock Temporal handle
     mock_handle = MagicMock()
     mock_handle.id = "test_workflow_id"
     mock_temporal.start_workflow.return_value = mock_handle
+
+    # Mock Supabase credit check
+    # Return user with enough credits
+    mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+        {"credits": 100}
+    ]
+    # Mock update (deduction)
+    mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = None
     
-    response = await client.post("/api/courses/generate", json=payload)
+    response = await client.post("/create-curriculum", json=payload)
     
     if response.status_code == 404:
-        pytest.skip("Endpoint /api/courses/generate not found")
+        pytest.skip("Endpoint /create-curriculum not found")
 
     assert response.status_code == 200
     data = response.json()

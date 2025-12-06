@@ -24,6 +24,7 @@ PRICE_IDS = {
 
 # Plan credits (automatically assigned after successful payment)
 # Note: 1 course generation = 10 credits
+COURSE_GENERATION_COST = 10
 PLAN_CREDITS = {
     "free": 20,   # 2 course generations
     "plus": 50,   # 5 course generations

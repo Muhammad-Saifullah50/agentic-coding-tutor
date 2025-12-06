@@ -142,6 +142,7 @@ For EVERY module and EVERY lesson in the outline:
 - Maintain the lesson structure EXACTLY as defined.
 - Respect allowed lesson types only.
 - Always return valid and strictly escaped JSON. Always enclose code in triple backticks. Escape all quotes inside code strings.
+- **CRITICAL:** When providing code examples, YOU MUST FORMAT THEM AS MULTI-LINE CODE BLOCKS. Do NOT put code on a single line. Use explicit newlines characters (\\n) in your JSON string for line breaks. Indent properly.
 - Balance quiz and playground lessons as required.
 - Personalize everything toward this specific learner.
 - Produce output that strictly matches the FullCourse schema.

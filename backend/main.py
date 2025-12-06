@@ -30,6 +30,7 @@ from activities.course_activities import generate_outline_activity, generate_cou
 
 # Business logic
 from actions.save_course import save_course
+from config.payment_constants import COURSE_GENERATION_COST
 from schemas.full_course import FullCourse
 from schemas.code_review_schemas import CodeReviewRequest, CodeReviewResponse
 
@@ -154,6 +155,44 @@ async def create_curriculum(request: Request):
 
         if not language or not focus:
             raise HTTPException(status_code=400, detail="Missing 'language' or 'focus'")
+
+        # Credit Check & Deduction
+        user_id = user_profile.get("userId")
+        if not user_id:
+             # Try getting from preferences if not in userProfile, or fail
+             user_id = preferences.get("userId")
+
+        if user_id:
+            print(f"💰 Checking credits for user: {user_id}")
+            response = supabase.table("UserProfile").select("credits").eq("userId", user_id).execute()
+            if response.data:
+                credits = response.data[0].get("credits", 0)  # Handle None as 0
+                if credits is None: credits = 0 # Double safety
+                
+                print(f"💳 Current credits: {credits}")
+                
+                if credits < COURSE_GENERATION_COST:
+                    print(f"🚫 Insufficient credits: {credits} < {COURSE_GENERATION_COST}")
+                    raise HTTPException(
+                        status_code=402, 
+                        detail=f"Insufficient credits. Required: {COURSE_GENERATION_COST}, Available: {credits}. Please upgrade your plan."
+                    )
+                
+                # Deduct credits
+                new_balance = credits - COURSE_GENERATION_COST
+                print(f"📉 Deducting credits: {credits} -> {new_balance}")
+                try:
+                    supabase.table("UserProfile").update({"credits": new_balance}).eq("userId", user_id).execute()
+                    print("✅ Credits deducted successfully")
+                except Exception as e:
+                    print(f"❌ Failed to deduct credits: {e}")
+                    raise HTTPException(status_code=500, detail="Transaction failed. Please try again.")
+            else:
+                print(f"⚠️ User profile not found for credit check: {user_id}")
+                # Decide if we allow or block. Let's block to be safe.
+                raise HTTPException(status_code=404, detail="User profile not found.")
+        else:
+             print("⚠️ No userId provided for credit check. Skipping (dev mode?)")
 
         workflow_id = f"course-gen-{uuid.uuid4()}"
         print(f"🚀 Starting workflow: {workflow_id}")
