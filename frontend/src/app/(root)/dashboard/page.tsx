@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const DashboardPage = async () => {
   const user = await currentUser();
 
-  if (!user) redirect('/login')
+  if (!user) redirect('/sign-in')
 
   const courses = (await getUserCourses(user.id)) || [];
   const userProfile = await getUserDetails(user.id);

@@ -11,8 +11,9 @@ import {
 
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import { SignOutButton } from "@clerk/clerk-react"
+import { User } from "@clerk/nextjs/server"
 
-const MobileNav = ({ navItems, user }) => {
+const MobileNav = ({ navItems, user }: { navItems: Array<{ label: string; href: string }>; user: User }) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -52,12 +53,12 @@ const MobileNav = ({ navItems, user }) => {
                 <div className="flex flex-col gap-3 pt-4 border-t border-border">
                   {!user ? (
                     <>
-                      <Link href="/login" onClick={() => setOpen(false)}>
+                      <Link href="/sign-in" onClick={() => setOpen(false)}>
                         <Button variant="outline" className="w-full rounded-xl">
                           Log In
                         </Button>
                       </Link>
-                      <Link href="/signup" onClick={() => setOpen(false)}>
+                      <Link href="/sign-up" onClick={() => setOpen(false)}>
                         <Button className="btn-hero w-full rounded-xl">
                           Start Learning Free
                         </Button>

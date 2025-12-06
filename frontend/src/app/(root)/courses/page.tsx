@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const MyCoursesPage = async () => {
   const user = await currentUser()
 
-  if (!user) redirect('/login')
+  if (!user) redirect('/sign-in')
   const courses = await getUserCourses(user?.id)
   return (
     <Courses courses={courses} />

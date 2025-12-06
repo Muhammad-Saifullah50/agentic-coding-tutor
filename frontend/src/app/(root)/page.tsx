@@ -24,11 +24,11 @@ export const metadata: Metadata = {
 };
 
 const HomePage = async () => {
-  const user = await currentUser();
+  // const user = await currentUser();
 
   return (
     <div className="min-h-screen">
-      <Hero userId={user?.id} />
+      {/* <Hero userId={user?.id} /> */}
       <Features />
       <Pricing />
       <Footer />

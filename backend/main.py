@@ -440,44 +440,7 @@ async def mentor_chat(request: MentorChatRequest):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
-# --- API Endpoint: ChatKit ---
-from fastapi.responses import Response
-from chatkit.server import StreamingResult
-from chatkit_server import mentor_chatkit_server, MentorRequestContext
 
-@app.post("/chatkit")
-async def chatkit_endpoint(request: Request):
-    """
-    ChatKit endpoint for AI Mentor chat.
-    Handles both streaming and non-streaming responses.
-    """
-    # Get request body
-    body = await request.body()
-    
-    # Extract user_id from request metadata
-    try:
-        import json
-        payload = json.loads(body)
-        metadata = payload.get("metadata", {})
-        user_id = metadata.get("user_id")
-        
-        if not user_id:
-            raise HTTPException(status_code=400, detail="user_id required in metadata")
-        
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid request: {str(e)}")
-    
-    # Create request context
-    context = MentorRequestContext(user_id=user_id)
-    
-    # Process through ChatKit server
-    result = await mentor_chatkit_server.process(body, context)
-    
-    if isinstance(result, StreamingResult):
-        return StreamingResponse(result, media_type="text/event-stream")
-    return Response(content=result.json, media_type="application/json")
 
 
 # --- API Endpoint: Stripe Checkout Session ---
