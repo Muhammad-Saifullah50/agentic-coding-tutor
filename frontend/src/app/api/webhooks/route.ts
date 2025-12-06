@@ -2,6 +2,7 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/utils/supabase/admin';
+import { PLANS } from '@/constants/paymentConstants';
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +49,12 @@ export async function POST(req: Request) {
         console.error('Error verifying webhook:', err)
         return new Response('Error occured', {
             status: 400,
-            
+
         })
     }
 
     const eventType = evt.type;
-    
+
     if (eventType === 'user.created') {
         const { id, email_addresses, image_url, username } = evt.data;
 
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
                     email: email_addresses[0].email_address,
                     username: username,
                     imageUrl: image_url,
+                    credits: PLANS.free.credits,
                 },
             ]);
 
@@ -79,7 +81,7 @@ export async function POST(req: Request) {
     if (eventType === 'user.updated') {
         const { id, email_addresses, image_url, username } = evt.data;
 
-        const {  error } = await supabaseAdmin
+        const { error } = await supabaseAdmin
             .from('UserProfile')
             .update({
                 email: email_addresses[0].email_address,
