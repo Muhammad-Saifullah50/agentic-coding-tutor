@@ -440,6 +440,36 @@ async def mentor_chat(request: MentorChatRequest):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+@app.get("/mentor/history/{user_id}")
+async def get_mentor_history(user_id: str):
+    """
+    Retrieve the chat history for a user.
+    """
+    try:
+        session = get_mentor_session(user_id)
+        items = await session.get_items()
+        
+        history = []
+        for item in items:
+            # Handle different item structures if necessary
+            # The agents library typically stores items as dicts
+            if isinstance(item, dict):
+                role = item.get("role")
+                content = item.get("content")
+                
+                # Map 'model' role to 'assistant' for frontend consistency
+                if role == "model":
+                    role = "assistant"
+                
+                if role and content:
+                    history.append({"role": role, "content": content})
+        
+        return {"history": history}
+    except Exception as e:
+        print(f"❌ Error fetching history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 

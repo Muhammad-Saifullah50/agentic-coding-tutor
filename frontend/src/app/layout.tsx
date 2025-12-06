@@ -7,8 +7,6 @@ import {
 } from '@clerk/nextjs'
 import Navbar from '@/components/Navbar'
 import MentorChatbox from '@/components/MentorChatbox'
-import { getCurrentUserWithProfile } from '@/actions/profile.actions'
-import { redirect } from 'next/navigation'
 
 export default async function RootLayout({
   children,
@@ -16,9 +14,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
 
-  const user = await getCurrentUserWithProfile()
 
-  if (user && !user?.onBoarded) redirect('/onboarding');
   return (
     <ClerkProvider>
 
@@ -31,7 +27,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <main id='root' className=''>
-              <Navbar user={user} />
+              <Navbar />
               <div className="min-h-screen bg-background pt-20">
                 {children}
               </div>

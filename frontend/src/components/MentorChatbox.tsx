@@ -31,17 +31,37 @@ export default function MentorChatbox() {
         scrollToBottom();
     }, [messages]);
 
-    // Show welcome message on first open
+    // Fetch history on open
     useEffect(() => {
         if (isExpanded && messages.length === 0) {
-            setMessages([
-                {
-                    role: 'assistant',
-                    content: "👋 Hi! I'm your AI Mentor. I'm here to help you with your studies, answer questions, plan your learning, and guide you toward your goals. What would you like to know?",
-                },
-            ]);
+            const fetchHistory = async () => {
+                if (!user?.id) return;
+
+                try {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/mentor/history/${user.id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.history && data.history.length > 0) {
+                            setMessages(data.history);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch history:', error);
+                }
+
+                // If no history, show welcome message
+                setMessages([
+                    {
+                        role: 'assistant',
+                        content: "👋 Hi! I'm your AI Mentor. I'm here to help you with your studies, answer questions, plan your learning, and guide you toward your goals. What would you like to know?",
+                    },
+                ]);
+            };
+
+            fetchHistory();
         }
-    }, [isExpanded]);
+    }, [isExpanded, user?.id]);
 
     const sendMessage = async () => {
         if (!inputValue.trim() || isLoading) return;

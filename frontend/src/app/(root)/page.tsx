@@ -2,7 +2,6 @@ import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
-import { currentUser } from "@clerk/nextjs/server";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,12 +22,11 @@ export const metadata: Metadata = {
   },
 };
 
-const HomePage = async () => {
-  // const user = await currentUser();
+const HomePage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* <Hero userId={user?.id} /> */}
+      <Hero />
       <Features />
       <Pricing />
       <Footer />

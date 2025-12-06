@@ -1,8 +1,9 @@
-import { Sparkles, Code2, Terminal, Cpu } from "lucide-react";
-import { HeroButtons } from "./client/HeroButtons";
+// components/Hero.tsx
+import { Sparkles } from "lucide-react";
 import { HeroScreenshot } from "./client/HeroScreenshot";
+import { HeroButtonsWrapper } from "./HeroButtonsWrapper";
 
-const Hero = ({ userId }: { userId: string | undefined | null }) => {
+const Hero = () => {
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
       {/* Animated Background */}
@@ -19,24 +20,34 @@ const Hero = ({ userId }: { userId: string | undefined | null }) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Centered Content */}
         <div className="text-center max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 backdrop-blur-md shadow-sm hover:bg-primary/15 transition-colors cursor-default">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-md shadow-sm hover:bg-primary/15 transition-colors cursor-default opacity-100">
             <Sparkles className="w-4 h-4 text-primary animate-pulse" />
             <span className="text-sm font-medium text-primary">AI-Powered Learning Platform</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100 fill-mode-both">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight tracking-tight opacity-100">
             Master Coding
             <span className="block mt-2">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent animate-gradient-x">with AI Guidance</span>
+              <span
+                style={{
+                  background: 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)))',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                }}
+              >
+                with AI Guidance
+              </span>
             </span>
           </h1>
 
-          <p className="text-xl sm:text-2xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 fill-mode-both font-light">
+          <p className="text-xl sm:text-2xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto font-light opacity-100">
             Accelerate your journey from beginner to pro with personalized AI mentorship, interactive challenges, and real-time code analysis.
           </p>
 
-          <HeroButtons userId={userId} />
-
+          {/* No Suspense needed - loading handled inside the component */}
+          <HeroButtonsWrapper />
         </div>
 
         {/* IDE Screenshot Below Hero */}

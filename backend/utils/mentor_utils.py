@@ -1,4 +1,4 @@
-from agents import SQLiteSession
+
 from typing import List
 from schemas.user_profile_context import UserProfile
 
@@ -42,7 +42,8 @@ Be encouraging, educational, and adapt your explanations to their experience lev
     return context
 
 
-def get_mentor_session(user_id: str) -> SQLiteSession:
-    """Get or create a SQLiteSession for the user's mentor conversations."""
-    session_id = f"mentor_user_{user_id}"
-    return SQLiteSession(session_id, "mentor_sessions.db")
+from utils.supabase_session import SupabaseSession
+
+def get_mentor_session(user_id: str) -> SupabaseSession:
+    """Get a SupabaseSession for the user's mentor conversations."""
+    return SupabaseSession(user_id)
