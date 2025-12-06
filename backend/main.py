@@ -20,6 +20,10 @@ from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
 from openai import AsyncOpenAI
 
+# Initialize clients
+temporal_client = None
+worker_task = None
+
 # Workflows / Activities
 from workflows.course_workflow import CourseAgent
 from activities.course_activities import generate_outline_activity, generate_course_activity
@@ -312,11 +316,14 @@ async def review_code(request: CodeReviewRequest):
         except InputGuardrailTripwireTriggered as e:
             # Guardrail was triggered
             print(f"🚫 Guardrail triggered: {e}")
+            print(f"DEBUG: Exception dir: {dir(e)}")
             
             # Extract the reason from guardrail output
             error_msg = "Invalid code input."
             if hasattr(e, 'guardrail_result') and hasattr(e.guardrail_result, 'output_info'):
                 output_info = e.guardrail_result.output_info
+                print(f"DEBUG: output_info type: {type(output_info)}")
+                print(f"DEBUG: output_info content: {output_info}")
                 if hasattr(output_info, 'reason') and output_info.reason:
                     error_msg = output_info.reason
             
