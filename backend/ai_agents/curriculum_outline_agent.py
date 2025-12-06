@@ -171,7 +171,7 @@ When generating the course outline:
 # 🎯 FINAL OUTPUT EXPECTATION
 
 Generate a complete, structured, personalized curriculum outline with:
-- 4–8 modules  
+- 4-5 modules  
 - Clear module sequencing  
 - Lessons adapted to learning style  
 - Accurate time estimates  

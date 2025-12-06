@@ -1,5 +1,5 @@
 "use client";
-import { PLANS } from "@/config/paymentConstants";
+import { PLANS } from "@/constants/paymentConstants";
 import { Button } from "@/components/ui/button";
 interface SubscriptionCardProps {
   planKey: keyof typeof PLANS;

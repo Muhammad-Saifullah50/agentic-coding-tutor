@@ -6,7 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
-import { PLANS } from "@/config/paymentConstants";
+import { PLANS } from "@/constants/paymentConstants";
 import { toast } from "sonner";
 
 // Convert PLANS object to array for rendering

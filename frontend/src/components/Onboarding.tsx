@@ -7,6 +7,17 @@ import { Progress } from '@/components/ui/progress';
 import { Code2, Sparkles, Target, Brain, Clock, CheckCircle2, Edit2 } from 'lucide-react';
 import { updateUserProfile } from '@/actions/profile.actions';
 import { toast } from 'sonner';
+import {
+  AGE_RANGES,
+  EDUCATION_LEVELS,
+  TECH_BACKGROUNDS,
+  CODING_EXPERIENCES,
+  GOALS,
+  LEARNING_SPEEDS,
+  LEARNING_MODES,
+  TIME_COMMITMENTS,
+  PREFERRED_LANGUAGES
+} from "@/constants/onboarding";
 
 const Onboarding = ({ userId }: { userId: string }) => {
   const router = useRouter();
@@ -179,7 +190,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Age Range</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['18-25', '26-35', '36-45', '46+'].map(range => (
+                    {AGE_RANGES.map(range => (
                       <Button
                         key={range}
                         variant={formData.ageRange === range ? 'default' : 'outline'}
@@ -195,7 +206,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Education Level</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['High School', 'College', 'Graduate', 'Self-taught'].map(level => (
+                    {EDUCATION_LEVELS.map(level => (
                       <Button
                         key={level}
                         variant={formData.educationLevel === level ? 'default' : 'outline'}
@@ -211,7 +222,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Tech Background</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['Non-Tech', 'Tech-Adjacent', 'Technical'].map(bg => (
+                    {TECH_BACKGROUNDS.map(bg => (
                       <Button
                         key={bg}
                         variant={formData.techBackground === bg ? 'default' : 'outline'}
@@ -227,7 +238,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Coding Experience</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['Beginner', 'Some Practice', 'Intermediate', 'Advanced'].map(exp => (
+                    {CODING_EXPERIENCES.map(exp => (
                       <Button
                         key={exp}
                         variant={formData.codingExperience === exp ? 'default' : 'outline'}
@@ -245,7 +256,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
             {/* Step 1: Goals */}
             {step === 1 && (
               <div className="space-y-2">
-                {['Career Change', 'Skill Enhancement', 'Build Projects', 'Start a Business', 'Learn for Fun', 'Academic Purpose'].map(goal => (
+                {GOALS.map(goal => (
                   <Button
                     key={goal}
                     variant={formData.goals.includes(goal) ? 'default' : 'outline'}
@@ -265,7 +276,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Learning Speed</label>
                   <div className="grid grid-cols-1 gap-2">
-                    {['Take it slow', 'Moderate pace', 'Fast track'].map(speed => (
+                    {LEARNING_SPEEDS.map(speed => (
                       <Button
                         key={speed}
                         variant={formData.learningSpeed === speed ? 'default' : 'outline'}
@@ -281,7 +292,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Learning Mode</label>
                   <div className="grid grid-cols-1 gap-2">
-                    {['More Theory', 'Balanced', 'More Practice'].map(mode => (
+                    {LEARNING_MODES.map(mode => (
                       <Button
                         key={mode}
                         variant={formData.learningMode === mode ? 'default' : 'outline'}
@@ -302,7 +313,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Time Per Week</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['1-3 hours', '3-5 hours', '5-10 hours', '10+ hours'].map(time => (
+                    {TIME_COMMITMENTS.map(time => (
                       <Button
                         key={time}
                         variant={formData.timePerWeek === time ? 'default' : 'outline'}
@@ -318,7 +329,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Preferred Language</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['English', 'Spanish', 'French', 'German', 'Chinese', 'Japanese'].map(lang => (
+                    {PREFERRED_LANGUAGES.map(lang => (
                       <Button
                         key={lang}
                         variant={formData.preferredLanguage === lang ? 'default' : 'outline'}

@@ -25,10 +25,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from 'next/navigation';
+import { PROGRAMMING_LANGUAGES as languages, FOCUS_AREAS as focuses, GOALS, CODING_EXPERIENCES, TECH_BACKGROUNDS, EDUCATION_LEVELS, AGE_RANGES, LEARNING_SPEEDS, LEARNING_MODES, TIME_COMMITMENTS, PREFERRED_LANGUAGES } from "@/constants/onboarding";
+
 
 const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
+
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
   const [generatedOutline, setGeneratedOutline] = useState<CurriculumOutline | null>(null);
@@ -37,41 +38,20 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
   const [editableProfile, setEditableProfile] = useState(userProfile);
   const [additionalNotes, setAdditionalNotes] = useState('');
 
-  // New state for polling
-  const [isPolling, setIsPolling] = useState(false);
 
   const router = useRouter();
 
-  const languages = [
-    { value: 'python', label: 'Python', color: 'from-blue-500 to-blue-600' },
-    { value: 'javascript', label: 'JavaScript', color: 'from-yellow-500 to-yellow-600' },
-    { value: 'java', label: 'Java', color: 'from-red-500 to-orange-600' },
-    { value: 'cpp', label: 'C++', color: 'from-purple-500 to-purple-600' },
-    { value: 'csharp', label: 'C#', color: 'from-green-500 to-green-600' },
-    { value: 'go', label: 'Go', color: 'from-cyan-500 to-cyan-600' },
-  ];
-
-  const focuses = [
-    'Web Development',
-    'Data Science',
-    'Machine Learning',
-    'Mobile Development',
-    'Game Development',
-    'Backend Development',
-    'DevOps',
-    'Cybersecurity',
-  ];
 
   const profileOptions = {
-    goals: ['Career Change', 'Skill Enhancement', 'Build Projects', 'Start a Business', 'Learn for Fun', 'Academic Purpose'],
-    codingExperience: ['Beginner', 'Some Practice', 'Intermediate', 'Advanced'],
-    techBackground: ['Non-Tech', 'Tech-Adjacent', 'Technical'],
-    educationLevel: ['High School', 'College', 'Graduate', 'Self-taught'],
-    ageRange: ['18-25', '26-35', '36-45', '46+'],
-    learningSpeed: ['Take it slow', 'Moderate pace', 'Fast track'],
-    learningMode: ['More Theory', 'Balanced', 'More Practice'],
-    timePerWeek: ['1-3 hours', '3-5 hours', '5-10 hours', '10+ hours'],
-    preferredLanguage: ['English', 'Spanish', 'French', 'German', 'Chinese', 'Japanese'],
+    goals: GOALS,
+    codingExperience: CODING_EXPERIENCES,
+    techBackground: TECH_BACKGROUNDS,
+    educationLevel: EDUCATION_LEVELS,
+    ageRange: AGE_RANGES,
+    learningSpeed: LEARNING_SPEEDS,
+    learningMode: LEARNING_MODES,
+    timePerWeek: TIME_COMMITMENTS,
+    preferredLanguage: PREFERRED_LANGUAGES,
   };
 
   const handleProfileChange = (field: keyof UserProfile, value: string) => {
@@ -211,6 +191,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       if (!res.ok) {
         const text = await res.text();
+              toast.error('Failed to generate final course. Please try again.', { id: courseToastId });
         throw new Error(text || 'Failed to generate final course');
       }
 
@@ -226,7 +207,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       if (typeof result === 'string') {
         try {
           parsedResult = JSON.parse(result);
-        } catch (e) {
+        } catch (e) { 
           // ignore
         }
       }

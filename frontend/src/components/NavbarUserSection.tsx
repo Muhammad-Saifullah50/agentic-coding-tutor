@@ -5,13 +5,13 @@ import { User } from "lucide-react"
 import Image from "next/image"
 import { Button } from "./ui/button"
 import { useUser } from "@clerk/nextjs"
-import { Skeleton } from "./ui/skeleton"
+import { NavbarUserSectionSkeleton } from "./skeletons/NavbarUserSectionSkeleton"
 
 export function NavbarUserSection() {
   const { user, isLoaded } = useUser()
 
   if (!isLoaded) {
-    return <Skeleton className="h-10 w-20" /> // or return skeleton
+    return <NavbarUserSectionSkeleton />
   }
 
   if (!user) {

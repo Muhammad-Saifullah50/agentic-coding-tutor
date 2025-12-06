@@ -6,13 +6,10 @@ import { NavbarUserSection } from "./NavbarUserSection"
 import { NavbarContent } from "./NavbarContent"
 import { MobileNavWrapper } from "./MobileNavWrapper"
 
+import { NAV_ITEMS } from "@/constants/navigation"
+
 const Navbar = () => {
-  const navItems = [
-    { label: "Features", href: "#features" },
-    { label: "Playground", href: "/playground" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "About", href: "#about" },
-  ]
+  const navItems = NAV_ITEMS
 
   return (
     <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b border-border z-50">

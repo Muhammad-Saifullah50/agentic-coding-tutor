@@ -6,7 +6,7 @@ import { UserProfile } from '@/types/user';
 import Image from 'next/image';
 import { ProfileEditButton, PreferencesEditButton, OnboardingButton } from './client/ProfileActions';
 import { Button } from '@/components/ui/button';
-import { PLAN_DETAILS } from '@/config/paymentConstants';
+import { PLAN_DETAILS } from '@/constants/paymentConstants';
 
 interface ProfileProps {
   userProfile: UserProfile | null;
@@ -270,14 +270,7 @@ const Profile = ({ userProfile, progressData }: ProfileProps) => {
                 </div>
               )}
 
-              {currentPlan !== 'free' && (
-                <div className="text-center text-sm text-muted-foreground">
-                  <p>Next billing date: January 1, 2026</p>
-                  <Button variant="link" className="text-primary">
-                    Manage Subscription
-                  </Button>
-                </div>
-              )}
+            
             </CardContent>
           </Card>
         </div>

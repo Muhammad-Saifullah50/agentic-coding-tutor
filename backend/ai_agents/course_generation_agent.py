@@ -69,7 +69,7 @@ Each **quiz** lesson must include:
 
 ### 📏 Lesson Type Balancing Rules
 - After every **3–4 content lessons**, include a **quiz lesson**.
-- After every **2–3 modules**, include an advanced challenge as a **playground** lesson.
+- After every **1-2 content lessons**, include an advanced challenge as a **playground** lesson.
   (This must still use the `playground` type; do NOT invent new types.)
 
 
@@ -137,7 +137,7 @@ Modules: {outline.modules}
 ### 🎯 Your Mission
 For EVERY module and EVERY lesson in the outline:
 - Greatly expand the content with rich, detailed explanations.
-- Keep tone warm, encouraging, friendly, and mentor-like.
+- Keep tone warm, encouraging, friendly, and mentor-like. 
 - Add depth, stories, examples, exercises, analogies, hands-on tasks.
 - Maintain the lesson structure EXACTLY as defined.
 - Respect allowed lesson types only.
@@ -145,7 +145,7 @@ For EVERY module and EVERY lesson in the outline:
 - Balance quiz and playground lessons as required.
 - Personalize everything toward this specific learner.
 - Produce output that strictly matches the FullCourse schema.
-- Each lesson must have at most 1 consise para
+- Each lesson must have at most 1 concise paragraph.
 
 Make every lesson feel like a real teacher is guiding the student.
 """
