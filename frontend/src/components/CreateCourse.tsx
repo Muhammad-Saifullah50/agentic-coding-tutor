@@ -153,6 +153,19 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
         }),
       });
 
+      if (res.status === 402) {
+        toast.error('Insufficient Credits', {
+          description: 'You need more credits to generate a course.',
+          id: toastId,
+          action: {
+            label: 'Upgrade',
+            onClick: () => router.push('/pricing'),
+          },
+          duration: 5000,
+        });
+        return;
+      }
+
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || 'Failed to start course generation');
@@ -191,7 +204,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       if (!res.ok) {
         const text = await res.text();
-              toast.error('Failed to generate final course. Please try again.', { id: courseToastId });
+        toast.error('Failed to generate final course. Please try again.', { id: courseToastId });
         throw new Error(text || 'Failed to generate final course');
       }
 
@@ -207,7 +220,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
       if (typeof result === 'string') {
         try {
           parsedResult = JSON.parse(result);
-        } catch (e) { 
+        } catch (e) {
           // ignore
         }
       }
