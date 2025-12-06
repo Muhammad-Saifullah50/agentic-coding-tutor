@@ -9,13 +9,14 @@ import {
 import { detectLanguage } from '@/lib/detectLanguage';
 
 const CodeBox = ({ codestr }: { codestr: string }) => {
-    const language = detectLanguage(codestr)
+    const formattedCode = codestr.replace(/\\n/g, '\n');
+    const language = detectLanguage(formattedCode);
 
     const code = [
         {
             language: language,
             filename: '',
-            code: codestr
+            code: formattedCode
         },
     ];
     return (

@@ -3,7 +3,7 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'; // Import the existing admin client
 
 export async function getCourseByCourseId(courseId: string) {
-  
+
 
   const { data, error } = await supabaseAdmin
     .from('Course') // Assuming your table name is 'Course'
@@ -23,7 +23,8 @@ export async function getUserCourses(userId: string) {
   const { data, error } = await supabaseAdmin
     .from('Course')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching user courses:', error);

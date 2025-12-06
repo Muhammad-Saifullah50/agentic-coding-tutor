@@ -27,7 +27,7 @@ const QuotaModal = ({ open, onOpenChange }: QuotaModalProps) => {
           </div>
           <DialogTitle className="text-2xl">You've reached your free lesson limit 💡</DialogTitle>
           <DialogDescription className="text-base pt-2">
-            You've used all your free AI lessons this month. Upgrade to continue learning with your personalized AI tutor and unlock unlimited access.
+            You've used all your free AI lessons. Upgrade to continue learning with your personalized AI tutor and unlock unlimited access.
           </DialogDescription>
         </DialogHeader>
 
@@ -48,7 +48,7 @@ const QuotaModal = ({ open, onOpenChange }: QuotaModalProps) => {
         </div>
 
         <div className="text-center text-xs text-muted-foreground pt-2">
-          <p>Pro Plan: Unlimited lessons + analytics for just $19/month</p>
+          <p>Pro Plan: Unlimited lessons + analytics for just $19</p>
         </div>
       </DialogContent>
     </Dialog>

@@ -4,8 +4,8 @@
 # Get these from: https://dashboard.stripe.com/test/products
 # 
 # Steps:
-# 1. Create "Plus Plan" product with $5/month → Copy the Price ID
-# 2. Create "Pro Plan" product with $8/month → Copy the Price ID
+# 1. Create "Plus Plan" product with $5 → Copy the Price ID
+# 2. Create "Pro Plan" product with $8 → Copy the Price ID
 # 3. Paste the Price IDs below (format: price_xxxxxxxxxxxxx)
 # ====================================================================
 

@@ -40,7 +40,7 @@ export const LessonContent = ({
   return (
     <div className="h-full flex flex-col">
       <Card className="flex-1 p-6 md:p-8 overflow-auto">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-foreground mb-6">{title}</h1>
 
           <div className="prose prose-slate dark:prose-invert max-w-none">
