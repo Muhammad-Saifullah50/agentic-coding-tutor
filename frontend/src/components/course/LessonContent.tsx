@@ -4,8 +4,7 @@ import { CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { useState } from 'react';
 
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
 import CodeBox from "../CodeBox";
 
 interface LessonContentProps {
@@ -45,7 +44,22 @@ export const LessonContent = ({
 
           <div className="prose prose-slate dark:prose-invert max-w-none">
             <div className="text-foreground leading-relaxed whitespace-pre-line">
-              <ReactMarkdown >
+              <ReactMarkdown
+                components={{
+                  code({ node, inline, className, children, ...props }: any) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    return !inline && match ? (
+                      <div className="my-4">
+                        <CodeBox codestr={String(children).replace(/\n$/, '')} language={match[1]} />
+                      </div>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    )
+                  }
+                }}
+              >
                 {content}
               </ReactMarkdown>
             </div>
@@ -56,7 +70,39 @@ export const LessonContent = ({
               <h3 className="text-lg font-semibold text-foreground mb-3">Example Code:</h3>
               <Card className="bg-muted p-4 overflow-x-auto">
 
-                <CodeBox codestr={codeExample}/> 
+                {(() => {
+                  const example = codeExample.trim();
+                  // Check if it's a markdown code block
+                  if (example.startsWith('```')) {
+                    return (
+                      <ReactMarkdown
+                        components={{
+                          code({ node, inline, className, children, ...props }: any) {
+                            const match = /language-(\w+)/.exec(className || '')
+                            return !inline && match ? (
+                              <CodeBox codestr={String(children).replace(/\n$/, '')} language={match[1]} />
+                            ) : (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            )
+                          }
+                        }}
+                      >
+                        {example}
+                      </ReactMarkdown>
+                    );
+                  }
+
+                  // Check for single backticks `...`
+                  const singleMatch = /^`([^`]+)`$/.exec(example);
+                  if (singleMatch) {
+                    return <CodeBox codestr={singleMatch[1]} />;
+                  }
+
+                  // Fallback: regular string
+                  return <CodeBox codestr={example} />;
+                })()}
 
               </Card>
             </div>

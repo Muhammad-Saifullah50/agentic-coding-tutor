@@ -8,13 +8,13 @@ import {
 } from '@/components/ui/shadcn-io/code-block';
 import { detectLanguage } from '@/lib/detectLanguage';
 
-const CodeBox = ({ codestr }: { codestr: string }) => {
+const CodeBox = ({ codestr, language }: { codestr: string, language?: string }) => {
     const formattedCode = codestr.replace(/\\n/g, '\n');
-    const language = detectLanguage(formattedCode);
+    const detectedLanguage = language || detectLanguage(formattedCode);
 
     const code = [
         {
-            language: language,
+            language: detectedLanguage,
             filename: '',
             code: formattedCode
         },

@@ -451,7 +451,10 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       {/* Dialog for Human-in-the-Loop approval */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[625px] bg-background border-border/50 shadow-2xl">
+        <DialogContent
+          className="sm:max-w-[625px] bg-background border-border/50 shadow-2xl"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-gradient flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-primary" />

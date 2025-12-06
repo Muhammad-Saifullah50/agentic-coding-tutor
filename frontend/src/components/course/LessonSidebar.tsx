@@ -31,7 +31,6 @@ export const LessonSidebar = ({
     }
   }, [currentLessonId]);
 
-console.log(modules, 'asASa')
   return (
     <Card className="h-full flex flex-col">
       <div className="p-6 border-b border-border">
@@ -54,7 +53,10 @@ console.log(modules, 'asASa')
                   return (
                     <button
                       key={lesson.id}
-                      ref={el => lessonRefs.current.set(lesson.id, el)}
+                      ref={(el) => {
+                        if (el) lessonRefs.current.set(lesson.id, el);
+                        else lessonRefs.current.delete(lesson.id);
+                      }}
                       onClick={() => canAccess && onLessonSelect(lesson.id)}
                       disabled={!canAccess}
                       className={cn(

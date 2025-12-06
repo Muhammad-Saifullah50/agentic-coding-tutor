@@ -28,8 +28,10 @@ export default function MentorChatbox() {
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (isExpanded) {
+            scrollToBottom();
+        }
+    }, [messages, isExpanded]);
 
     // Fetch history on open
     useEffect(() => {
@@ -156,7 +158,7 @@ export default function MentorChatbox() {
             {!isExpanded && (
                 <button
                     onClick={() => setIsExpanded(true)}
-                    className="fixed bottom-6 right-6 z-50 group"
+                    className="fixed bottom-24 right-6 z-50 group"
                     aria-label="Open AI Mentor"
                 >
                     <div className="relative">
@@ -175,7 +177,7 @@ export default function MentorChatbox() {
 
             {/* Expanded Chatbox */}
             {isExpanded && (
-                <div className="fixed bottom-6 right-6 z-50 w-[400px] h-[600px] max-h-[80vh] 
+                <div className="fixed bottom-24 right-6 z-50 w-[400px] h-[600px] max-h-[80vh] 
                       bg-card border border-border rounded-2xl shadow-2xl 
                       flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300
                       sm:w-[400px] md:w-[420px]">
@@ -211,7 +213,11 @@ export default function MentorChatbox() {
                                     {msg.role === 'assistant' ? (
                                         <div className="prose prose-sm dark:prose-invert max-w-none">
                                             {msg.content ? (
-                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                                <ReactMarkdown>
+                                                    {typeof msg.content === 'string'
+                                                        ? msg.content
+                                                        : JSON.stringify(msg.content, null, 2)}
+                                                </ReactMarkdown>
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <Loader2 className="w-4 h-4 animate-spin" />

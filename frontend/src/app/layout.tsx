@@ -8,6 +8,12 @@ import {
 import Navbar from '@/components/Navbar'
 import MentorChatbox from '@/components/MentorChatbox'
 
+
+export const metadata = {
+  title: 'CodeQuora',
+  description: 'AI-powered coding tutor',
+}
+
 export default async function RootLayout({
   children,
 }: {

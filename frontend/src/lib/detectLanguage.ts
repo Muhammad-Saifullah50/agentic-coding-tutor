@@ -1,5 +1,5 @@
 export function detectLanguage(code: string): string {
-  const trimmed = code.trim();
+
 
   // --- Python ---
   if (
@@ -15,7 +15,6 @@ export function detectLanguage(code: string): string {
   if (
     /function\s+\w+\s*\(/.test(code) ||                 // function x()
     /\w+\s*=\s*\(/.test(code) ||                        // const x = ()
-    /console\.log/.test(code) ||                        // console.log
     /export\s+(default\s+)?(function|class|const|let)/.test(code)
   ) {
     return "javascript";

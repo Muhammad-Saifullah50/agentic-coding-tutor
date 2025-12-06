@@ -18,8 +18,8 @@ pro_plan_price_id = os.getenv("PRO_PLAN_PRICE_ID")
 
 PRICE_IDS = {
     "free": None,  # Free tier - no Stripe checkout needed
-    "plus": plus_plan_price_id,   # TODO: Replace with actual Price ID from Stripe Dashboard
-    "pro": pro_plan_price_id,      # TODO: Replace with actual Price ID from Stripe Dashboard
+    "plus": plus_plan_price_id,
+    "pro": pro_plan_price_id,
 }
 
 # Plan credits (automatically assigned after successful payment)

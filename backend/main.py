@@ -397,7 +397,13 @@ async def mentor_chat(request: MentorChatRequest):
         session = get_mentor_session(request.user_id)
         
         items = await session.get_items()
-        user_input = f"{context}\n\nStudent: {request.message}" if len(items) == 0 else request.message
+        
+        # Inject context as a system message if this is the first interaction
+        if len(items) == 0:
+            print("✨ Injecting system context...")
+            await session.add_items([{"role": "system", "content": context}])
+        
+        user_input = request.message
         
     except HTTPException:
         raise
@@ -460,6 +466,10 @@ async def get_mentor_history(user_id: str):
                 # Map 'model' role to 'assistant' for frontend consistency
                 if role == "model":
                     role = "assistant"
+                
+                # Filter out system messages
+                if role == "system":
+                    continue
                 
                 if role and content:
                     history.append({"role": role, "content": content})
