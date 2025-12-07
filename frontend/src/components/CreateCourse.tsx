@@ -178,7 +178,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
     } catch (error) {
       console.error(error);
-      toast.error('Failed to start course generation.', { id: toastId });
+      toast.error('Failed to start course generation. Check your credits.', { id: toastId });
     }
   };
 
