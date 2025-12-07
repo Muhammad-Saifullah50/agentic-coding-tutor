@@ -36,7 +36,17 @@ export const LessonPlayground = ({
   isNextLessonLocked,
   isLoading,
 }: LessonPlaygroundProps) => {
-  const [code, setCode] = useState(starterCode);
+  // Strip markdown code fences from AI corrected code
+  const stripMarkdownCodeFences = (code: string): string => {
+    const codeBlockRegex = /^```[\w]*\n([\s\S]*?)```$/m;
+    const match = code.match(codeBlockRegex);
+    if (match) {
+      return match[1].trim();
+    }
+    return code.trim();
+  };
+
+  const [code, setCode] = useState(stripMarkdownCodeFences(starterCode));
   const [aiReview, setAiReview] = useState<{
     correctedCode?: string;
     feedback?: string;
@@ -56,18 +66,8 @@ export const LessonPlayground = ({
     monaco.languages.register({ id: 'csharp' });
   };
 
-  // Strip markdown code fences from AI corrected code
-  const stripMarkdownCodeFences = (code: string): string => {
-    const codeBlockRegex = /^```[\w]*\n([\s\S]*?)```$/m;
-    const match = code.match(codeBlockRegex);
-    if (match) {
-      return match[1].trim();
-    }
-    return code.trim();
-  };
-
   const handleReset = () => {
-    setCode(starterCode);
+    setCode(stripMarkdownCodeFences(starterCode));
     setAiReview(null);
     setActiveLeftTab("challenge");
     setActiveRightTab("user-code");

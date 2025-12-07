@@ -83,7 +83,7 @@ describe('LessonPlayground Component', () => {
     it('handles AI review', async () => {
         render(<LessonPlayground {...defaultProps} />);
         const reviewButton = screen.getByText('Get AI Review');
-        
+
         await act(async () => {
             fireEvent.click(reviewButton);
         });
@@ -100,6 +100,16 @@ describe('LessonPlayground Component', () => {
         const completeButton = screen.getByText('Mark as Complete');
         fireEvent.click(completeButton);
         expect(defaultProps.onComplete).toHaveBeenCalled();
+    });
+
+    it('strips markdown fences from starter code', () => {
+        const propsWithMarkdown = {
+            ...defaultProps,
+            starterCode: '```python\nprint("Hello from Markdown")\n```'
+        };
+        render(<LessonPlayground {...propsWithMarkdown} />);
+        const editor = screen.getByTestId('monaco-editor');
+        expect(editor).toHaveValue('print("Hello from Markdown")');
     });
 });
 

@@ -5,6 +5,7 @@ import { CourseBackButton } from "./CourseBackButton"
 import { NavbarUserSection } from "./NavbarUserSection"
 import { NavbarContent } from "./NavbarContent"
 import { MobileNavWrapper } from "./MobileNavWrapper"
+import SignOutButton from "./SignOutButton"
 
 import { NAV_ITEMS } from "@/constants/navigation"
 
@@ -29,6 +30,7 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-4">
             <ThemeToggleButton />
+            <SignOutButton />
             <NavbarUserSection />
           </div>
 
