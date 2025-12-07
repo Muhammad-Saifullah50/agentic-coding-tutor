@@ -237,6 +237,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
 
       toast.success('Your course has been successfully generated!', {
         id: courseToastId,
+        duration: Infinity,
         action: {
           label: 'View Course',
           onClick: () => router.push(`/courses/${parsedCourseId}`),
