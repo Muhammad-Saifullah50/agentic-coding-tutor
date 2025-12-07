@@ -19,7 +19,7 @@ sample_item_B = [
     }
 ]
 
-# Case C: Item is a STRINGIFIED list (Probable cause of the issue)
+# Case C: Item is a STRINGIFIED list
 sample_item_C = json.dumps([
     {
         "text": "Hello again from STRINGIFIED list...", 
@@ -29,12 +29,29 @@ sample_item_C = json.dumps([
     }
 ])
 
+# Case D: Item is a standard dict but content is a LIST (The new reported issue)
+sample_item_D = {
+    "id": "__fake_id__",
+    "role": "assistant",
+    "type": "message",
+    "status": "completed",
+    "content": [
+      {
+        "text": "Hello from nested content list! This should be extracted.",
+        "type": "output_text",
+        "logprobs": [],
+        "annotations": []
+      }
+    ]
+  }
+
 # Sample history containing mixed items
 mock_history = [
     {"role": "user", "content": "Who am I?"},  # Standard
     sample_item_A,                             # Complex Dict
     sample_item_B,                             # Complex List
-    sample_item_C                              # Complex Stringified List
+    sample_item_C,                             # Complex Stringified List
+    sample_item_D                              # Nested Content List
 ]
 
 def parse_history(items):
@@ -43,28 +60,35 @@ def parse_history(items):
         role = None
         content = None
         
-        # --- NEW LOGIC START ---
-        # 0. Handle Stringified JSON
+        # 0. Handle Stringified JSON (Fix for double-encoded messages)
         if isinstance(item, str):
             try:
-                # Try to parse string as JSON
                 parsed = json.loads(item)
-                # Note: valid JSON could be a dict, list, string, etc.
                 if isinstance(parsed, (dict, list)):
                     item = parsed
             except json.JSONDecodeError:
-                # Not a JSON string, treat as normal format? 
-                # Actually if it's a string in 'items', it's likely invalid unless it's a message content itself?
-                # But 'items' is a list of message objects. A string item implies malformed data or stringified object.
                 pass
-        # --- NEW LOGIC END ---
 
         # 1. Standard dict format: {"role": "...", "content": "..."}
         if isinstance(item, dict):
             if "role" in item and "content" in item:
                 role = item.get("role")
-                content = item.get("content")
-            # 2. Complex dict format: {"text": "...", "type": "output_text"}
+                raw_content = item.get("content")
+                
+                # --- NEW LOGIC START ---
+                # Check if content is a list of objects (common in LangChain/Agent output)
+                if isinstance(raw_content, list) and len(raw_content) > 0 and isinstance(raw_content[0], dict):
+                    first = raw_content[0]
+                    if "text" in first:
+                        content = first.get("text")
+                    else:
+                        # Fallback: dump it to string if no text field
+                        content = str(raw_content) 
+                else:
+                    content = raw_content
+                # --- NEW LOGIC END ---
+
+            # 2. Complex dict format (No role, just text/type): {"text": "...", "type": "output_text"}
             elif "text" in item and "type" in item:
                 msg_type = item.get("type")
                 if msg_type == "output_text":

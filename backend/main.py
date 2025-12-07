@@ -521,7 +521,18 @@ async def get_mentor_history(user_id: str):
             if isinstance(item, dict):
                 if "role" in item and "content" in item:
                     role = item.get("role")
-                    content = item.get("content")
+                    raw_content = item.get("content")
+                    
+                    # Check if content is a list of objects (common in LangChain/Agent output)
+                    if isinstance(raw_content, list) and len(raw_content) > 0 and isinstance(raw_content[0], dict):
+                        first = raw_content[0]
+                        if "text" in first:
+                            content = first.get("text")
+                        else:
+                            content = str(raw_content)
+                    else:
+                        content = raw_content
+
                 # 2. Complex dict format: {"text": "...", "type": "output_text"}
                 elif "text" in item and "type" in item:
                     msg_type = item.get("type")
