@@ -508,6 +508,15 @@ async def get_mentor_history(user_id: str):
             role = None
             content = None
 
+            # 0. Handle Stringified JSON (Fix for double-encoded messages)
+            if isinstance(item, str):
+                try:
+                    parsed = json.loads(item)
+                    if isinstance(parsed, (dict, list)):
+                        item = parsed
+                except json.JSONDecodeError:
+                    pass
+
             # 1. Standard dict format: {"role": "...", "content": "..."}
             if isinstance(item, dict):
                 if "role" in item and "content" in item:
