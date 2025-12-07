@@ -18,7 +18,7 @@ def create_checkout_session(user_id: str, email: str, plan_key: str, success_url
     customer_id = get_or_create_customer(user_id, email)
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
-        mode="subscription",
+        mode="payment",
         customer=customer_id,
         line_items=[{"price": price_id, "quantity": 1}],
         success_url=success_url,
