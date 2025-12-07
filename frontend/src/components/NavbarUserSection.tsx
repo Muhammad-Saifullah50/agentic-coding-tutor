@@ -4,8 +4,9 @@ import Link from "next/link"
 import { User } from "lucide-react"
 import Image from "next/image"
 import { Button } from "./ui/button"
-import { SignOutButton, useUser } from "@clerk/nextjs"
+import {  useUser } from "@clerk/nextjs"
 import { NavbarUserSectionSkeleton } from "./skeletons/NavbarUserSectionSkeleton"
+import SignOutButton from "./SignOutButton"
 
 export function NavbarUserSection() {
   const { user, isLoaded } = useUser()
