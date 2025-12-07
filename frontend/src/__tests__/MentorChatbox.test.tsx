@@ -59,23 +59,60 @@ describe('MentorChatbox Component', () => {
   it('sends a message and displays response', async () => {
     render(<MentorChatbox />);
     fireEvent.click(screen.getByLabelText('Open AI Mentor'));
-    
+
     const input = screen.getByPlaceholderText('Ask me anything about your studies...');
     fireEvent.change(input, { target: { value: 'Hello' } });
-    
+
     const sendButton = screen.getByTestId('send-icon').closest('button');
     fireEvent.click(sendButton!);
-    
+
     expect(screen.getByText('Hello')).toBeInTheDocument(); // User message
-    
+
     await waitFor(() => {
-        // Since we mock fetch but the component logic might be complex with streams or simple responses
-        // Based on the component code:
-        // setMessages(prev => [...prev, { role: 'assistant', content: '', id: aiMsgId }])
-        // It seems it expects a stream or just updates.
-        // Wait, the component code I read earlier had a syntax error in fetch:
-        // setMessages((prev) => prev.slice(0, -1)); inside fetch args?
-        // Let's re-read the component code carefully.
+      // Since we mock fetch but the component logic might be complex with streams or simple responses
+      // Based on the component code:
+      // setMessages(prev => [...prev, { role: 'assistant', content: '', id: aiMsgId }])
+      // It seems it expects a stream or just updates.
+      // Wait, the component code I read earlier had a syntax error in fetch:
+      // setMessages((prev) => prev.slice(0, -1)); inside fetch args?
+      // Let's re-read the component code carefully.
+    });
+  });
+  // Mock TextEncoder/TextDecoder
+  global.TextEncoder = require('util').TextEncoder;
+  global.TextDecoder = require('util').TextDecoder;
+
+  it('parses nested JSON in streamed response', async () => {
+    const mockStream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        // Mock the nested JSON structure: { content: "[ { \"text\": \"Hello extracted\", ... } ]" }
+        const nestedJson = JSON.stringify([{ text: "Hello extracted", type: "output_text" }]);
+        const chunk = JSON.stringify({ content: nestedJson });
+
+        controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      }
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      body: mockStream,
+      headers: { get: () => 'text/event-stream' }
+    });
+
+    render(<MentorChatbox />);
+    fireEvent.click(screen.getByLabelText('Open AI Mentor'));
+
+    const input = screen.getByPlaceholderText('Ask me anything about your studies...');
+    fireEvent.change(input, { target: { value: 'Test' } });
+
+    const sendButton = screen.getByTestId('send-icon').closest('button');
+    fireEvent.click(sendButton!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Hello extracted')).toBeInTheDocument();
     });
   });
 });

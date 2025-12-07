@@ -118,7 +118,25 @@ export default function MentorChatbox() {
                         try {
                             const parsed = JSON.parse(data)
                             if (parsed.content) {
-                                aiResponse += parsed.content
+                                let contentToAppend = parsed.content;
+                                // Check if content is a JSON string/object that needs unwrapping
+                                try {
+                                    if (typeof contentToAppend === 'string' && (contentToAppend.trim().startsWith('{') || contentToAppend.trim().startsWith('['))) {
+                                        const innerParsed = JSON.parse(contentToAppend);
+                                        // Handle array case [ { "text": "..." } ]
+                                        if (Array.isArray(innerParsed) && innerParsed.length > 0 && innerParsed[0]?.text) {
+                                            contentToAppend = innerParsed[0].text;
+                                        }
+                                        // Handle object case { "text": "..." }
+                                        else if (innerParsed?.text) {
+                                            contentToAppend = innerParsed.text;
+                                        }
+                                    }
+                                } catch (e) {
+                                    // If parsing fails or structure doesn't match, keep original content
+                                }
+
+                                aiResponse += contentToAppend
                                 setMessages(prev =>
                                     prev.map(msg =>
                                         msg.id === aiMsgId ? { ...msg, content: aiResponse } : msg
