@@ -7,8 +7,9 @@ import { Button } from "./ui/button"
 const SignOutButton = () => {
     return (
         <ClerkSignOutButton>
-            <Button variant={'ghost'} size={'icon'} className="rounded-full w-8 h-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                <LogOut className="w-4 h-4" />
+            <Button variant="outline" size="icon">
+                <LogOut className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Sign out</span>
             </Button>
         </ClerkSignOutButton>
     )
