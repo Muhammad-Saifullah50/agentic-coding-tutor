@@ -505,20 +505,44 @@ async def get_mentor_history(user_id: str):
         for item in items:
             # Handle different item structures if necessary
             # The agents library typically stores items as dicts
+            role = None
+            content = None
+
+            # 1. Standard dict format: {"role": "...", "content": "..."}
             if isinstance(item, dict):
-                role = item.get("role")
-                content = item.get("content")
-                
-                # Map 'model' role to 'assistant' for frontend consistency
-                if role == "model":
-                    role = "assistant"
-                
-                # Filter out system messages
-                if role == "system":
-                    continue
-                
-                if role and content:
-                    history.append({"role": role, "content": content})
+                if "role" in item and "content" in item:
+                    role = item.get("role")
+                    content = item.get("content")
+                # 2. Complex dict format: {"text": "...", "type": "output_text"}
+                elif "text" in item and "type" in item:
+                    msg_type = item.get("type")
+                    if msg_type == "output_text":
+                        role = "assistant"
+                    elif msg_type == "input_text":
+                        role = "user"
+                    content = item.get("text")
+
+            # 3. List format (common in some agent frameworks): [{"text": "...", ...}]
+            elif isinstance(item, list) and len(item) > 0 and isinstance(item[0], dict):
+                 first = item[0]
+                 if "text" in first and "type" in first:
+                    msg_type = first.get("type")
+                    if msg_type == "output_text":
+                        role = "assistant"
+                    elif msg_type == "input_text":
+                        role = "user"
+                    content = first.get("text")
+
+            # Normalize roles
+            if role == "model":
+                role = "assistant"
+            
+            # Filter system messages
+            if role == "system":
+                continue
+            
+            if role and content:
+                history.append({"role": role, "content": content})
         
         return {"history": history}
     except Exception as e:

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { User } from "lucide-react"
 import Image from "next/image"
 import { Button } from "./ui/button"
-import {  useUser } from "@clerk/nextjs"
+import { useUser } from "@clerk/nextjs"
 import { NavbarUserSectionSkeleton } from "./skeletons/NavbarUserSectionSkeleton"
 import SignOutButton from "./SignOutButton"
 
@@ -31,10 +31,11 @@ export function NavbarUserSection() {
   return (
     <>
       <Link href="/dashboard">
-                  <SignOutButton />
 
         <Button className="rounded-xl">Dashboard</Button>
       </Link>
+      <SignOutButton />
+
       <Link href={`/profile/${user.id}`}>
         <Button
           variant="ghost"
