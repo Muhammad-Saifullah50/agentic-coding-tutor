@@ -51,7 +51,6 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
     learningSpeed: LEARNING_SPEEDS,
     learningMode: LEARNING_MODES,
     timePerWeek: TIME_COMMITMENTS,
-    preferredLanguage: PREFERRED_LANGUAGES,
   };
 
   const handleProfileChange = (field: keyof UserProfile, value: string) => {
@@ -309,7 +308,7 @@ const CreateCourse = ({ userProfile }: { userProfile: UserProfile }) => {
               {[
                 { label: 'Background', value: editableProfile.techBackground, field: 'techBackground', options: profileOptions.techBackground, icon: Code2, color: 'from-primary/10 to-primary/5 border-primary/20' },
                 { label: 'Coding Experience', value: editableProfile.codingExperience, field: 'codingExperience', options: profileOptions.codingExperience, icon: Code2, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
-                { label: 'Learning Goal', value: editableProfile.goals[0], field: 'goals', options: profileOptions.goals, icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
+                { label: 'Learning Goal', value: editableProfile.goals?.[0], field: 'goals', options: profileOptions.goals, icon: Target, color: 'from-secondary/10 to-secondary/5 border-secondary/20' },
                 { label: 'Learning Speed', value: editableProfile.learningSpeed, field: 'learningSpeed', options: profileOptions.learningSpeed, icon: Clock, color: 'from-primary/10 to-primary/5 border-primary/20' },
                 { label: 'Time Commitment', value: editableProfile.timePerWeek, field: 'timePerWeek', options: profileOptions.timePerWeek, icon: Clock, color: 'from-accent/10 to-accent/5 border-accent/20' },
                 { label: 'Learning Style', value: editableProfile.learningMode, field: 'learningMode', options: profileOptions.learningMode, icon: Brain, color: 'from-primary/10 to-secondary/5 border-primary/20' },

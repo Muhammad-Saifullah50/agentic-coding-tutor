@@ -15,8 +15,7 @@ import {
   GOALS,
   LEARNING_SPEEDS,
   LEARNING_MODES,
-  TIME_COMMITMENTS,
-  PREFERRED_LANGUAGES
+  TIME_COMMITMENTS
 } from "@/constants/onboarding";
 
 const Onboarding = ({ userId }: { userId: string }) => {
@@ -34,7 +33,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
     learningSpeed: '',
     learningMode: '',
     timePerWeek: '',
-    preferredLanguage: '',
+    preferredLanguage: 'English',
   });
 
   const totalSteps = 5;
@@ -326,22 +325,8 @@ const Onboarding = ({ userId }: { userId: string }) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Preferred Language</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {PREFERRED_LANGUAGES.map(lang => (
-                      <Button
-                        key={lang}
-                        variant={formData.preferredLanguage === lang ? 'default' : 'outline'}
-                        onClick={() => setFormData({ ...formData, preferredLanguage: lang })}
-                        className="rounded-xl"
-                      >
-                        {lang}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
               </div>
+
             )}
 
             {/* Step 4: Review */}
@@ -358,7 +343,6 @@ const Onboarding = ({ userId }: { userId: string }) => {
                       { label: 'Learning Speed', value: formData.learningSpeed, step: 2 },
                       { label: 'Learning Mode', value: formData.learningMode, step: 2 },
                       { label: 'Time per Week', value: formData.timePerWeek, step: 3 },
-                      { label: 'Language', value: formData.preferredLanguage, step: 3 },
                     ].map(item => (
                       <div key={item.label} className="flex items-center justify-between">
                         <div>
@@ -400,7 +384,7 @@ const Onboarding = ({ userId }: { userId: string }) => {
               (step === 0 && (!formData.ageRange || !formData.educationLevel || !formData.techBackground || !formData.codingExperience)) ||
               (step === 1 && formData.goals.length === 0) ||
               (step === 2 && (!formData.learningSpeed || !formData.learningMode)) ||
-              (step === 3 && (!formData.timePerWeek || !formData.preferredLanguage))
+              (step === 3 && (!formData.timePerWeek))
             }
           >
             {step === totalSteps - 1 ? 'Complete Setup' : 'Continue'}
