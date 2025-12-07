@@ -20,6 +20,10 @@ const DashboardPage = async () => {
   const courses = (await getUserCourses(user.id)) || [];
   const userProfile = await getUserDetails(user.id);
 
+  if (!userProfile?.onBoarded) {
+    redirect('/onboarding');
+  }
+  
   return (
     <>
       <PaymentSuccessHandler />
