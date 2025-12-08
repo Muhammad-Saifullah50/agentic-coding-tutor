@@ -1,9 +1,7 @@
 import os
-import ssl
 import json
 import uuid
 import asyncio
-import tempfile
 from contextlib import asynccontextmanager
 from utils.stripe_utils import create_checkout_session, handle_webhook
 
@@ -11,7 +9,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware'
+
+from utils.repair_json import repair_json
 
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -45,17 +45,6 @@ from utils.mentor_utils import get_mentor_session, build_context_message
 from utils.supabase_client import supabase
 import stripe
 from utils.stripe_utils import create_checkout_session, handle_webhook
-import base64
-
-# AGENTOPS_API_KEY = os.getenv("AGENTOPS_API_KEY")
-
-# agentops.init()
-import os
-import ssl
-import base64
-import tempfile
-import asyncio
-import textwrap # <--- Make sure this is imported
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -277,8 +266,23 @@ async def generate_course(workflow_id: str, request: Request):
         print("🎉 Final course generated successfully!")
         
         # Parse the JSON string to FullCourse object
-        final_course_dict = json.loads(final_course_json) if isinstance(final_course_json, str) else final_course_json
+        # ---- 🔥 REPAIR RAW JSON BEFORE PARSING 🔥 ----
+        if isinstance(final_course_json, str):
+            fixed_json = repair_json(final_course_json)
+
+            try:
+                final_course_dict = json.loads(fixed_json)
+            except Exception as e:
+                print("❌ JSON STILL BROKEN after repair. Dumping output:")
+                print(fixed_json)
+                raise e
+        else:
+            # If Temporal returned already-parsed dict
+            final_course_dict = final_course_json
+
+        # ---- Validate with Pydantic ----
         final_course = FullCourse(**final_course_dict)
+
         
         # Save to Supabase
         print(f"💾 Saving course to database for user: {user_id}")
