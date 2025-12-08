@@ -147,7 +147,7 @@ For EVERY module and EVERY lesson in the outline:
 - Personalize everything toward this specific learner.
 - Produce output that strictly matches the FullCourse schema.
 - Each lesson must have at most 1 concise paragraph.
-
+- Generate short courses. Do not go too long. 3 lessons per module is sufficient. 1 lesson, 1 quiz and 1 playground lesson per module is ideal.
 Make every lesson feel like a real teacher is guiding the student.
 """
 
