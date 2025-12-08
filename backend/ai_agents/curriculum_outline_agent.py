@@ -172,6 +172,7 @@ When generating the course outline:
 
 Generate a complete, structured, personalized curriculum outline with:
 - 4-5 modules  
+- Generate short course outlines. Do not go too long. 3 lessons per module is sufficient. 1 lesson, 1 quiz and 1 playground lesson per module is ideal.
 - Clear module sequencing  
 - Lessons adapted to learning style  
 - Accurate time estimates  
