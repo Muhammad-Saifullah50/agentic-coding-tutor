@@ -1,4 +1,4 @@
-from agents import Agent, RunContextWrapper
+from agents import Agent, ModelSettings, RunContextWrapper
 from schemas.curriculum_outline import CurriculumOutline
 from schemas.full_course import FullCourse
 from schemas.user_profile_context import UserProfile
@@ -161,4 +161,5 @@ course_generation_agent = Agent(
     output_type=FullCourse,
     model=gemini_model,
     output_guardrails=[validate_course_content],
+    model_settings=ModelSettings(max_tokens=50000)
 )
